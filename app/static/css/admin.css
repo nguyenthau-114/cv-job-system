@@ -1,0 +1,525 @@
+
+:root {
+    --admin-primary: #2563A6;
+    --admin-sidebar-bg: #183B63;
+    --admin-text: #30465C;
+    --admin-border: #e5eaf0;
+    --admin-bg: #f5f7fb;
+}
+
+body.admin-body {
+    margin: 0;
+    background: var(--admin-bg);
+    color: var(--admin-text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Sidebar */
+.admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1040;
+    width: 260px;
+    height: 100vh;
+    background: var(--admin-sidebar-bg);
+    color: #fff;
+    flex-direction: column;
+    border: 0;
+}
+
+.admin-mobile-sidebar {
+    --bs-offcanvas-width: 260px;
+    --bs-offcanvas-bg: #183B63;
+    --bs-offcanvas-color: #fff;
+    background: var(--admin-sidebar-bg);
+    color: #fff;
+}
+
+.admin-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, .12);
+    color: #fff;
+}
+
+.admin-brand .fw-bold {
+    color: #fff;
+}
+
+.admin-logo {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+    border-radius: 50%;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.admin-brand small {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: #b8cde3;
+}
+
+.admin-sidebar-content {
+    flex: 1;
+    min-height: 0;
+    padding: 25px 14px;
+    overflow-y: auto;
+}
+
+.admin-menu-label {
+    color: #91acc9;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    padding: 0 14px;
+    margin-bottom: 15px;
+}
+
+.admin-sidebar .nav-link,
+.admin-mobile-sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 13px 15px;
+    border-radius: 9px;
+    color: #c8d7e8;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.admin-sidebar .nav-link i,
+.admin-mobile-sidebar .nav-link i {
+    font-size: 18px;
+    width: 22px;
+    flex-shrink: 0;
+}
+
+.admin-sidebar a.nav-link:hover,
+.admin-mobile-sidebar a.nav-link:hover,
+.admin-sidebar .nav-link.active,
+.admin-mobile-sidebar .nav-link.active {
+    background: #315b87;
+    color: #fff;
+}
+
+.admin-sidebar .admin-nav-disabled,
+.admin-mobile-sidebar .admin-nav-disabled {
+    opacity: .65;
+    cursor: default;
+}
+
+.admin-sidebar-bottom {
+    padding: 16px 14px;
+    border-top: 1px solid rgba(255, 255, 255, .12);
+}
+
+.admin-logout {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    padding: 12px 15px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #dbe6f2;
+    text-align: left;
+    font-size: 14px;
+}
+
+.admin-logout i {
+    font-size: 18px;
+    width: 22px;
+}
+
+.admin-logout:hover {
+    background: #315b87;
+    color: #fff;
+}
+
+/* Layout */
+.admin-wrapper {
+    margin-left: 260px;
+    min-height: 100vh;
+}
+
+.admin-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 80px;
+    padding: 0 32px;
+    background: #fff;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-topbar h5,
+.admin-page-heading h3 {
+    color: var(--admin-text);
+}
+
+.admin-account {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    background: #eaf3fc;
+    color: var(--admin-primary);
+    border-radius: 50%;
+    font-size: 20px;
+}
+
+.admin-main {
+    padding: 32px;
+}
+
+.admin-page-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Card chung */
+.admin-stat-card,
+.admin-panel-card {
+    border: 1px solid var(--admin-border);
+    border-radius: 13px;
+    box-shadow: 0 2px 8px rgba(25, 55, 90, .025);
+}
+
+.admin-stat-card .card-body {
+    padding: 16px;
+}
+
+.admin-stat-card h3 {
+    font-size: 25px;
+    color: var(--admin-text);
+}
+
+.admin-stat-card p {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.admin-stat-icon,
+.admin-summary-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 11px;
+}
+
+.admin-stat-icon,
+.admin-summary-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+}
+
+.admin-stat-icon.blue,
+.admin-summary-icon.blue {
+    background: #e8f2ff;
+    color: #2563A6;
+}
+
+.admin-stat-icon.green,
+.admin-summary-icon.green {
+    background: #e6f6ed;
+    color: #268451;
+}
+
+.admin-stat-icon.orange,
+.admin-summary-icon.orange {
+    background: #fff3e5;
+    color: #ce8626;
+}
+
+.admin-stat-icon.red,
+.admin-summary-icon.red {
+    background: #fdeced;
+    color: #c54e57;
+}
+
+/* Card thống kê compact - Dashboard và Quản lý tài khoản */
+.admin-stat-compact .card-body,
+.admin-user-compact .card-body {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    min-height: 66px;
+}
+
+.admin-stat-compact .admin-stat-icon,
+.admin-user-compact .admin-stat-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.admin-stat-compact h3,
+.admin-user-compact h3 {
+    font-size: 21px;
+    line-height: 1.2;
+}
+
+.admin-stat-compact p,
+.admin-user-compact p {
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+/* Biểu đồ hoạt động tuyển dụng */
+.admin-chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 270px;
+}
+
+.admin-panel-caption {
+    padding: 6px 11px;
+    border-radius: 8px;
+    background: #eef4fb;
+    color: var(--admin-primary);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.admin-chart-note {
+    color: #7a8b9e;
+    font-size: 12px;
+}
+
+/* Thống kê người dùng trong Dashboard */
+.admin-summary-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.admin-summary-row:last-child {
+    margin-bottom: 0;
+}
+
+.admin-summary-row strong {
+    font-size: 25px;
+    color: var(--admin-text);
+}
+
+/* Thống kê người dùng dạng 2 ô nhỏ */
+.admin-user-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 8px;
+    border: 1px solid var(--admin-border);
+    border-radius: 10px;
+    background: #f8fafc;
+    text-align: center;
+}
+
+.admin-user-stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.admin-user-stat-icon.blue {
+    background: #e8f2ff;
+    color: #2563A6;
+}
+
+.admin-user-stat-icon.green {
+    background: #e6f6ed;
+    color: #268451;
+}
+
+.admin-user-stat strong {
+    font-size: 23px;
+    line-height: 1.2;
+    color: var(--admin-text);
+}
+
+.admin-user-stat span {
+    font-size: 12px;
+    color: #65768b;
+}
+
+/* Truy cập trang chủ */
+.admin-home-link {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    border-radius: 9px;
+    color: #dbe6f2;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.admin-home-link > i:first-child {
+    width: 22px;
+    font-size: 18px;
+}
+
+.admin-home-link > i:last-child {
+    font-size: 13px;
+    opacity: .75;
+}
+
+.admin-home-link:hover,
+.admin-home-link:focus-visible {
+    background: #315b87;
+    color: #fff;
+}
+
+/* Bảng quản lý tài khoản */
+.admin-users-table {
+    font-size: 14px;
+}
+
+.admin-users-table thead th {
+    padding: 14px 12px;
+    background: #f6f8fb;
+    color: #65768b;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.admin-users-table tbody td {
+    padding: 16px 12px;
+    border-color: var(--admin-border);
+}
+
+.admin-users-table tbody tr:hover td {
+    background: #f8fbff;
+}
+
+.admin-users-table .badge {
+    padding: 7px 10px;
+    font-weight: 500;
+}
+
+/* Thông báo */
+.admin-flash-container {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    z-index: 1100;
+    width: min(380px, calc(100% - 40px));
+}
+
+
+/* Quản lý tin tuyển dụng */
+.admin-job-detail {
+    font-size: 14px;
+    color: var(--admin-text);
+}
+.admin-job-longtext {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    line-height: 1.7;
+}
+.admin-users-table td {
+    vertical-align: middle;
+}
+.admin-users-table td:first-child {
+    min-width: 190px;
+}
+
+
+/* Responsive */
+@media (max-width: 991.98px) {
+    .admin-wrapper {
+        margin-left: 0;
+    }
+
+    .admin-topbar {
+        padding: 0 20px;
+    }
+
+    .admin-main {
+        padding: 24px 18px;
+    }
+
+    .admin-page-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-mobile-sidebar {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .admin-topbar {
+        height: 70px;
+    }
+
+    .admin-main {
+        padding: 20px 12px;
+    }
+
+    .admin-stat-card .card-body {
+        padding: 14px;
+    }
+
+    .admin-stat-compact .card-body,
+    .admin-user-compact .card-body {
+        padding: 9px;
+        min-height: 62px;
+    }
+
+    .admin-stat-compact .admin-stat-icon,
+    .admin-user-compact .admin-stat-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+
+    .admin-stat-compact h3,
+    .admin-user-compact h3 {
+        font-size: 19px;
+    }
+
+    .admin-stat-compact p,
+    .admin-user-compact p {
+        font-size: 11px;
+    }
+
+    .admin-chart-wrap {
+        height: 230px;
+    }
+
+    .admin-flash-container {
+        top: 80px;
+    }
+}

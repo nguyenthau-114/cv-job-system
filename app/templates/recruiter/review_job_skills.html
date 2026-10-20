@@ -1,0 +1,236 @@
+{% extends "recruiter/recruiter_base.html" %}
+{% block title %}Kiểm tra kỹ năng JD | JobFit{% endblock %}
+{% block recruiter_content %}
+<div style="color:#30465c;">
+    <a href="{{ url_for('recruiter.my_jobs') }}" class="text-decoration-none small" style="color:#2563a6;">
+        <i class="bi bi-arrow-left me-1"></i>Quản lý tin tuyển dụng
+    </a>
+    <h2 class="fw-bold mt-3" style="color:#2563a6;">Kiểm tra kỹ năng tuyển dụng</h2>
+    <p class="text-secondary">Kiểm tra kết quả nhận diện, bổ sung kỹ năng chuyên môn và xác định mức độ yêu cầu.</p>
+    <div class="d-flex flex-wrap gap-2 small mb-4">
+        <span class="text-secondary">01. Thông tin JD</span>
+        <span>›</span>
+        <strong style="color:#2563a6;">02. Kiểm tra kỹ năng</strong>
+        <span>›</span>
+        <span class="text-secondary">03. Xác nhận đăng tin</span>
+    </div>
+
+    <div class="card mb-4" style="border:1px solid #d1dbe6;border-radius:14px;">
+        <div class="card-body p-4">
+            <h5 class="fw-semibold mb-1">{{ data.job_title }}</h5>
+            <p class="text-secondary small mb-0">Hệ thống đề xuất {{ detected_skills|length }} kỹ năng. Bạn có thể
+                điều chỉnh trước khi đăng tin.</p>
+        </div>
+    </div>
+
+    <form id="skillReviewForm" method="POST" action="{{ url_for('recruiter.confirm_job') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% set jd_fields = [
+        'job_title', 'job_category_id', 'job_description', 'job_requirement',
+        'experience', 'level', 'quantity', 'work_mode', 'job_type',
+        'min_salary', 'max_salary', 'location', 'benefit',
+        'working_time', 'application_deadline'
+        ] %}
+        {% for field in jd_fields %}
+        <input type="hidden" name="{{ field }}" value="{{ data.get(field, '') }}">
+        {% endfor %}
+        <div id="skillInputs"></div>
+
+        <div class="card mb-4" style="border:1px solid #d1dbe6;border-radius:14px;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <h5 class="mb-0 fw-semibold">Danh sách kỹ năng đã chọn</h5>
+                    <span class="text-secondary small" id="skillCount">0 kỹ năng</span>
+                </div>
+                <div id="selectedSkills" class="d-grid gap-2"></div>
+                <p id="emptySkills" class="text-secondary small mb-0 d-none">Chưa có kỹ năng nào. Hãy tìm và bổ sung
+                    từ danh mục bên dưới.</p>
+            </div>
+        </div>
+
+        <div class="card mb-4" style="border:1px solid #d1dbe6;border-radius:14px;">
+            <div class="card-body p-4">
+                <h5 class="fw-semibold mb-2">Thêm kỹ năng chuyên môn</h5>
+                <p class="text-secondary small">Tìm kiếm kỹ năng trong danh mục đang hoạt động của JobFit.</p>
+                <input id="skillSearch" type="search" class="form-control mb-3"
+                    placeholder="Ví dụ: Docker, Linux, Hardware Troubleshooting..." autocomplete="off">
+                <div id="searchResults" class="list-group" style="max-height:280px;overflow:auto;"></div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between gap-2">
+            <button type="button" class="btn btn-outline-secondary" id="backToJd">
+                <i class="bi bi-arrow-left me-1"></i>Quay lại chỉnh JD
+            </button>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit" class="btn text-white" style="background:#2563a6;">
+                    Tiếp tục <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+        <p class="text-secondary small mt-3">Dữ liệu chưa được lưu vào database. Tin tuyển dụng chỉ được tạo sau
+            bước xác nhận cuối cùng.</p>
+    </form>
+
+    <form id="backForm" method="POST" action="{{ url_for('recruiter.create_job') }}" class="d-none">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% for field in jd_fields %}
+        <input type="hidden" name="{{ field }}" value="{{ data.get(field, '') }}">
+        {% endfor %}
+        <input type="hidden" name="edit_jd" value="1">
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Dữ liệu do Flask/Jinja2 tạo, tách khỏi JavaScript -->
+<div id="jobSkillData" data-skills="{{ available_skills | map(attribute='skill_id') | list | tojson | forceescape }}"
+    data-names="{{ available_skills | map(attribute='skill_name') | list | tojson | forceescape }}"
+    data-initial="{{ detected_skills | tojson | forceescape }}" hidden></div>
+<script>
+    (() => {
+        // Đọc dữ liệu kỹ năng đã được Flask truyền sang HTML.
+        const source = document.getElementById('jobSkillData');
+        const ids = JSON.parse(source.dataset.skills);
+        const names = JSON.parse(source.dataset.names);
+        const initial = JSON.parse(source.dataset.initial);
+        const available = ids.map((id, index) => ({
+            id: Number(id),
+            name: names[index]
+        }));
+
+        // Lưu tạm danh sách kỹ năng và mức độ yêu cầu trên trình duyệt.
+        const selected = new Map();
+        initial.forEach(skill => {
+            const id = Number(skill.skill_id);
+            if (available.some(item => item.id === id)) {
+                selected.set(id, skill.requirement_type || 'REQUIRED');
+            }
+        });
+
+        const list = document.getElementById('selectedSkills');
+        const inputs = document.getElementById('skillInputs');
+        const search = document.getElementById('skillSearch');
+        const results = document.getElementById('searchResults');
+        const count = document.getElementById('skillCount');
+        const empty = document.getElementById('emptySkills');
+
+        function render() {
+            list.replaceChildren();
+            inputs.replaceChildren();
+            count.textContent = selected.size + ' kỹ năng';
+            empty.classList.toggle('d-none', selected.size !== 0);
+
+            selected.forEach((kind, id) => {
+                const skill = available.find(item => item.id === id);
+                if (!skill) return;
+
+                const row = document.createElement('div');
+                row.className = 'd-flex flex-wrap align-items-center gap-2 border rounded-3 p-2';
+
+                const name = document.createElement('span');
+                name.className = 'fw-medium flex-grow-1 ps-2';
+                name.textContent = skill.name;
+
+                const type = document.createElement('select');
+                type.className = 'form-select form-select-sm';
+                type.style.maxWidth = '170px';
+
+                const options = [
+                    ['REQUIRED', 'Bắt buộc'],
+                    ['PREFERRED', 'Ưu tiên']
+                ];
+
+                options.forEach(([value, label]) => {
+                    type.add(new Option(label, value));
+                });
+
+                type.value = kind;
+                type.addEventListener('change', () => {
+                    selected.set(id, type.value);
+                    render();
+                });
+
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'btn btn-sm btn-outline-secondary';
+                remove.textContent = 'Xóa';
+                remove.addEventListener('click', () => {
+                    selected.delete(id);
+                    render();
+                    renderSearch();
+                });
+
+                row.append(name, type, remove);
+                list.append(row);
+
+                // Gửi skill_id và mức độ yêu cầu về Flask khi submit.
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'selected_skills';
+                hidden.value = id + ':' + kind;
+                inputs.append(hidden);
+            });
+        }
+
+        function renderSearch() {
+            const term = search.value.trim().toLocaleLowerCase();
+            results.replaceChildren();
+
+            if (!term) {
+                const hint = document.createElement('p');
+                hint.className = 'small text-secondary mb-0';
+                hint.textContent = 'Nhập tên kỹ năng để tìm kiếm.';
+                results.append(hint);
+                return;
+            }
+
+            // Chỉ hiển thị kỹ năng chưa được chọn.
+            const matches = available.filter(skill =>
+                !selected.has(skill.id) &&
+                skill.name.toLocaleLowerCase().includes(term)
+            ).slice(0, 20);
+
+            if (!matches.length) {
+                const message = document.createElement('p');
+                message.className = 'small text-secondary mb-0';
+                message.textContent = 'Không tìm thấy kỹ năng phù hợp.';
+                results.append(message);
+                return;
+            }
+
+            matches.forEach(skill => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+
+                const name = document.createElement('span');
+                name.textContent = skill.name;
+
+                const add = document.createElement('span');
+                add.className = 'text-primary';
+                add.textContent = '+ Thêm';
+
+                button.append(name, add);
+                button.addEventListener('click', () => {
+                    selected.set(skill.id, 'REQUIRED');
+                    render();
+                    renderSearch();
+                });
+
+                results.append(button);
+            });
+        }
+
+        search.addEventListener('input', renderSearch);
+
+        // Quay lại form JD với dữ liệu đã nhập.
+        document.getElementById('backToJd').addEventListener('click', () => {
+            document.getElementById('backForm').submit();
+        });
+
+        render();
+        renderSearch();
+    })();
+</script>
+{% endblock %}

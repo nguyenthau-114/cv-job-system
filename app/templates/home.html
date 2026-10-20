@@ -1,14 +1,484 @@
-<!DOCTYPE html>
-<html lang="vi">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>CV Job System</title>
-</head>
+{% block title %}JobFit - Tìm việc IT phù hợp với kỹ năng{% endblock %}
 
-<body>
-    <h1>CV Job System</h1>
-    <p>Hệ thống phân tích CV và gợi ý việc làm IT.</p>
-</body>
+{% block content %}
 
-</html>
+<!-- =========================
+     HERO / BANNER
+========================= -->
+<section class="home-hero position-relative">
+    <!-- Carousel chỉ thay đổi ảnh nền -->
+    <div id="homeHeroCarousel" class="carousel slide carousel-fade home-hero-carousel" data-bs-ride="carousel"
+        data-bs-interval="5000">
+        <div class="carousel-inner h-100">
+            <div class="carousel-item active h-100">
+                <div class="home-hero-image home-hero-image-1"></div>
+            </div>
+            <div class="carousel-item h-100">
+                <div class="home-hero-image home-hero-image-2"></div>
+            </div>
+        </div>
+
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#homeHeroCarousel" data-bs-slide-to="0" class="active"
+                aria-current="true" aria-label="Banner 1"></button>
+            <button type="button" data-bs-target="#homeHeroCarousel" data-bs-slide-to="1"
+                aria-label="Banner 2"></button>
+        </div>
+    </div>
+
+    <!-- Lớp tối giúp nội dung dễ đọc trên ảnh -->
+    <div class="home-hero-dark-overlay"></div>
+
+    <!-- Nội dung Hero đứng yên khi ảnh nền thay đổi -->
+    <div class="home-hero-content-wrapper">
+        <div class="container">
+            <div class="home-hero-content text-center mx-auto">
+                <h1 class="home-hero-slogan fw-bold mb-4">
+                    JobFit - Phân tích CV, Kết nối kỹ năng,
+                    <span>Tìm việc IT phù hợp</span>
+                </h1>
+
+                <p class="lead text-white mb-4 mx-auto home-hero-description">
+                    Khám phá cơ hội việc làm IT mới nhất và tìm kiếm vị trí phù hợp
+                    với kỹ năng, kinh nghiệm và định hướng của bạn.
+                </p>
+
+                <!-- Thanh tìm kiếm -->
+                <div class="home-search bg-white rounded-4 shadow p-2 mx-auto mb-4">
+                    <div class="row g-2">
+                        <div class="col-md">
+                            <div class="input-group h-100">
+                                <span class="input-group-text bg-white border-0">
+                                    <i class="bi bi-search fs-5"></i>
+                                </span>
+                                <input type="text" class="form-control border-0 shadow-none"
+                                    placeholder="Vị trí, kỹ năng, công ty...">
+                            </div>
+                        </div>
+
+                        <div class="col-md-auto">
+                            <button type="button" class="btn btn-primary h-100 px-4 w-100">
+                                <i class="bi bi-search me-2"></i>
+                                Tìm việc
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <a href="#" class="btn btn-primary btn-lg px-4">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        Phân tích CV
+                    </a>
+                    <a href="#jobs" class="btn btn-light btn-lg px-4">
+                        Xem việc làm
+                        <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================
+     LĨNH VỰC IT
+========================= -->
+<section class="job-category-section">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-2 mb-3">
+            <div>
+                <h2 class="home-section-title">Khám phá lĩnh vực IT</h2>
+                <p class="home-section-description">
+                    Lựa chọn lĩnh vực phù hợp và khám phá cơ hội nghề nghiệp dành cho bạn
+                </p>
+            </div>
+
+            <a href="#" class="home-view-all flex-shrink-0">
+                Xem tất cả việc làm
+                <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="#"
+                    class="job-category-card d-flex flex-column align-items-center justify-content-center text-center text-decoration-none">
+                    <div class="job-category-icon d-flex align-items-center justify-content-center">
+                        <i class="bi bi-code-slash"></i>
+                    </div>
+                    <h3>Software Engineering</h3>
+                    <p>Phát triển phần mềm</p>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="#"
+                    class="job-category-card d-flex flex-column align-items-center justify-content-center text-center text-decoration-none">
+                    <div class="job-category-icon d-flex align-items-center justify-content-center">
+                        <i class="bi bi-bug"></i>
+                    </div>
+                    <h3>Software Testing</h3>
+                    <p>QA / QC / Tester</p>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="#"
+                    class="job-category-card d-flex flex-column align-items-center justify-content-center text-center text-decoration-none">
+                    <div class="job-category-icon d-flex align-items-center justify-content-center">
+                        <i class="bi bi-bar-chart-line"></i>
+                    </div>
+                    <h3>Data Science</h3>
+                    <p>Data & AI</p>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="#"
+                    class="job-category-card d-flex flex-column align-items-center justify-content-center text-center text-decoration-none">
+                    <div class="job-category-icon d-flex align-items-center justify-content-center">
+                        <i class="bi bi-server"></i>
+                    </div>
+                    <h3>IT Infrastructure</h3>
+                    <p>Hạ tầng & vận hành</p>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="#"
+                    class="job-category-card d-flex flex-column align-items-center justify-content-center text-center text-decoration-none">
+                    <div class="job-category-icon d-flex align-items-center justify-content-center">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h3>Cybersecurity</h3>
+                    <p>An toàn thông tin</p>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="#"
+                    class="job-category-card d-flex flex-column align-items-center justify-content-center text-center text-decoration-none">
+                    <div class="job-category-icon d-flex align-items-center justify-content-center">
+                        <i class="bi bi-palette"></i>
+                    </div>
+                    <h3>UI / UX</h3>
+                    <p>Thiết kế sản phẩm</p>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="#"
+                    class="job-category-card d-flex flex-column align-items-center justify-content-center text-center text-decoration-none">
+                    <div class="job-category-icon d-flex align-items-center justify-content-center">
+                        <i class="bi bi-kanban"></i>
+                    </div>
+                    <h3>IT Project Management</h3>
+                    <p>Quản lý dự án IT</p>
+                </a>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="#"
+                    class="job-category-card d-flex flex-column align-items-center justify-content-center text-center text-decoration-none">
+                    <div class="job-category-icon d-flex align-items-center justify-content-center">
+                        <i class="bi bi-grid"></i>
+                    </div>
+                    <h3>Khác</h3>
+                    <p>Lĩnh vực IT khác</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================
+     VIỆC LÀM IT NỔI BẬT
+========================= -->
+<section id="jobs" class="featured-job-section">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-2 mb-3">
+            <div>
+                <h2 class="home-section-title">Việc làm IT nổi bật</h2>
+                <p class="home-section-description">
+                    Khám phá những cơ hội việc làm IT đáng chú ý dành cho bạn
+                </p>
+            </div>
+
+            <a href="#" class="home-view-all flex-shrink-0">
+                Xem tất cả
+                <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <!-- Bộ lọc hiện là giao diện tạm, sẽ nối dữ liệu Job sau -->
+        <div class="featured-job-filter d-flex gap-2 mb-3 overflow-x-auto">
+            <button type="button" class="active">Tất cả</button>
+            <button type="button">Software</button>
+            <button type="button">Testing</button>
+            <button type="button">Data & AI</button>
+            <button type="button">Cybersecurity</button>
+            <button type="button">UI / UX</button>
+        </div>
+
+        <div class="row g-3">
+            <!-- Job 1 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="featured-job-card h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="featured-job-logo d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-code-slash"></i>
+                        </div>
+                        <div class="featured-job-main flex-grow-1">
+                            <h3><a href="#">Backend Developer</a></h3>
+                            <p>ABC Technology</p>
+                        </div>
+                        <span class="featured-job-save d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-heart"></i>
+                        </span>
+                    </div>
+
+                    <div class="featured-job-skills d-flex flex-wrap gap-2">
+                        <span>Python</span>
+                        <span>Flask</span>
+                        <span>MySQL</span>
+                    </div>
+
+                    <div class="featured-job-info d-flex flex-wrap gap-2">
+                        <span><i class="bi bi-cash-stack"></i>15 - 25 triệu</span>
+                        <span><i class="bi bi-geo-alt"></i>TP. Hồ Chí Minh</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job 2 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="featured-job-card h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="featured-job-logo d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-window"></i>
+                        </div>
+                        <div class="featured-job-main flex-grow-1">
+                            <h3><a href="#">Frontend Developer</a></h3>
+                            <p>TechSoft Vietnam</p>
+                        </div>
+                        <span class="featured-job-save d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-heart"></i>
+                        </span>
+                    </div>
+
+                    <div class="featured-job-skills d-flex flex-wrap gap-2">
+                        <span>JavaScript</span>
+                        <span>ReactJS</span>
+                        <span>HTML/CSS</span>
+                    </div>
+
+                    <div class="featured-job-info d-flex flex-wrap gap-2">
+                        <span><i class="bi bi-cash-stack"></i>18 - 30 triệu</span>
+                        <span><i class="bi bi-geo-alt"></i>Hà Nội</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job 3 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="featured-job-card h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="featured-job-logo d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-database"></i>
+                        </div>
+                        <div class="featured-job-main flex-grow-1">
+                            <h3><a href="#">Data Analyst</a></h3>
+                            <p>DataTech</p>
+                        </div>
+                        <span class="featured-job-save d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-heart"></i>
+                        </span>
+                    </div>
+
+                    <div class="featured-job-skills d-flex flex-wrap gap-2">
+                        <span>SQL</span>
+                        <span>Python</span>
+                        <span>Power BI</span>
+                    </div>
+
+                    <div class="featured-job-info d-flex flex-wrap gap-2">
+                        <span><i class="bi bi-cash-stack"></i>15 - 25 triệu</span>
+                        <span><i class="bi bi-geo-alt"></i>Đà Nẵng</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job 4 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="featured-job-card h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="featured-job-logo d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-bug"></i>
+                        </div>
+                        <div class="featured-job-main flex-grow-1">
+                            <h3><a href="#">QA / QC Engineer</a></h3>
+                            <p>NextTech Software</p>
+                        </div>
+                        <span class="featured-job-save d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-heart"></i>
+                        </span>
+                    </div>
+
+                    <div class="featured-job-skills d-flex flex-wrap gap-2">
+                        <span>Testing</span>
+                        <span>API</span>
+                        <span>SQL</span>
+                    </div>
+
+                    <div class="featured-job-info d-flex flex-wrap gap-2">
+                        <span><i class="bi bi-cash-stack"></i>12 - 20 triệu</span>
+                        <span><i class="bi bi-geo-alt"></i>TP. Hồ Chí Minh</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job 5 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="featured-job-card h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="featured-job-logo d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div class="featured-job-main flex-grow-1">
+                            <h3><a href="#">Security Engineer</a></h3>
+                            <p>CyberTech</p>
+                        </div>
+                        <span class="featured-job-save d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-heart"></i>
+                        </span>
+                    </div>
+
+                    <div class="featured-job-skills d-flex flex-wrap gap-2">
+                        <span>Linux</span>
+                        <span>Network</span>
+                        <span>Security</span>
+                    </div>
+
+                    <div class="featured-job-info d-flex flex-wrap gap-2">
+                        <span><i class="bi bi-cash-stack"></i>20 - 35 triệu</span>
+                        <span><i class="bi bi-geo-alt"></i>Hà Nội</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job 6 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="featured-job-card h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="featured-job-logo d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-palette"></i>
+                        </div>
+                        <div class="featured-job-main flex-grow-1">
+                            <h3><a href="#">UI / UX Designer</a></h3>
+                            <p>Digital Studio</p>
+                        </div>
+                        <span class="featured-job-save d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-heart"></i>
+                        </span>
+                    </div>
+
+                    <div class="featured-job-skills d-flex flex-wrap gap-2">
+                        <span>Figma</span>
+                        <span>UI Design</span>
+                        <span>UX Research</span>
+                    </div>
+
+                    <div class="featured-job-info d-flex flex-wrap gap-2">
+                        <span><i class="bi bi-cash-stack"></i>15 - 25 triệu</span>
+                        <span><i class="bi bi-geo-alt"></i>Remote</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================
+     JOBFIT HOẠT ĐỘNG
+========================= -->
+<section class="home-process-section">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h2 class="home-section-title">Tìm việc phù hợp chỉ với 3 bước</h2>
+            <p class="home-section-description">
+                JobFit giúp bạn khám phá việc làm phù hợp dựa trên kỹ năng được thể hiện trong CV.
+            </p>
+        </div>
+
+        <div class="home-process d-flex flex-column flex-md-row align-items-md-center">
+            <div class="home-process-item d-flex align-items-center gap-3 flex-fill">
+                <div class="home-process-icon d-flex align-items-center justify-content-center flex-shrink-0">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <span class="home-process-number d-flex align-items-center justify-content-center">1</span>
+                </div>
+                <div>
+                    <h3>Tải CV</h3>
+                    <p>Tải CV của bạn lên JobFit để bắt đầu.</p>
+                </div>
+            </div>
+
+            <div class="home-process-line d-none d-md-block">
+                <i class="bi bi-chevron-right"></i>
+            </div>
+
+            <div class="home-process-item d-flex align-items-center gap-3 flex-fill">
+                <div class="home-process-icon d-flex align-items-center justify-content-center flex-shrink-0">
+                    <i class="bi bi-stars"></i>
+                    <span class="home-process-number d-flex align-items-center justify-content-center">2</span>
+                </div>
+                <div>
+                    <h3>Phân tích kỹ năng</h3>
+                    <p>Nhận diện những kỹ năng được thể hiện trong CV.</p>
+                </div>
+            </div>
+
+            <div class="home-process-line d-none d-md-block">
+                <i class="bi bi-chevron-right"></i>
+            </div>
+
+            <div class="home-process-item d-flex align-items-center gap-3 flex-fill">
+                <div class="home-process-icon d-flex align-items-center justify-content-center flex-shrink-0">
+                    <i class="bi bi-briefcase"></i>
+                    <span class="home-process-number d-flex align-items-center justify-content-center">3</span>
+                </div>
+                <div>
+                    <h3>Khám phá việc làm</h3>
+                    <p>Xem những công việc IT có kỹ năng phù hợp với CV.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================
+     CTA
+========================= -->
+<section class="home-cta-section">
+    <div class="container">
+        <div class="home-cta d-flex align-items-center justify-content-center">
+            <div class="home-cta-overlay"></div>
+
+            <div class="home-cta-content text-center">
+                <h2>Sẵn sàng tìm công việc IT phù hợp?</h2>
+                <p>
+                    Bắt đầu với CV của bạn và khám phá những cơ hội
+                    phù hợp với kỹ năng đang có.
+                </p>
+
+                <a href="#" class="btn btn-light home-cta-button">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Bắt đầu với JobFit
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

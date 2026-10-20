@@ -1,0 +1,159 @@
+{% extends "recruiter/recruiter_base.html" %}
+{% block title %}Thông tin cá nhân - JobFit{% endblock %}
+{% block recruiter_content %}
+<div class="recruiter-account-page">
+    <div class="mb-4">
+        <h1 class="recruiter-page-title mb-1">Thông tin cá nhân</h1>
+        <p class="text-secondary mb-0">Quản lý thông tin và bảo mật tài khoản nhà tuyển dụng.</p>
+    </div>
+    <div class="card recruiter-profile-card mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="recruiter-profile-avatar">
+                        {% if user.avatar %}
+                        <img src="{{ url_for('static', filename=user.avatar) }}" alt="Ảnh đại diện">
+                        {% else %}
+                        <i class="bi bi-person-fill"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1">{{ user.user_name }}</h5>
+                        <div class="text-secondary small">Nhà tuyển dụng</div>
+                        <div class="text-success small mt-1"><i class="bi bi-patch-check-fill me-1"></i>Email đã xác
+                            thực</div>
+                    </div>
+                </div>
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#profileEditForm" aria-expanded="false" aria-controls="profileEditForm">
+                    <i class="bi bi-pencil-square me-1"></i>Chỉnh sửa
+                </button>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="text-secondary small mb-1">Họ và tên</div>
+                    <div class="fw-medium">{{ user.user_name }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-secondary small mb-1">Email đăng nhập</div>
+                    <div class="fw-medium text-break">{{ user.email }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-secondary small mb-1">Số điện thoại</div>
+                    <div class="fw-medium">{{ user.phone or 'Chưa cập nhật' }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-secondary small mb-1">Ngày tạo tài khoản</div>
+                    <div class="fw-medium">{{ user.user_created_at.strftime('%d/%m/%Y') if user.user_created_at else '—'
+                        }}</div>
+                </div>
+            </div>
+            <div class="collapse mt-4" id="profileEditForm">
+                <hr class="mb-4">
+                <h6 class="fw-bold mb-3">Cập nhật thông tin</h6>
+                <form action="{{ url_for('recruiter.account') }}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="user_name" class="form-label">Họ và tên <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="user_name" name="user_name"
+                                value="{{ user.user_name }}" maxlength="100" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Số điện thoại</label>
+                            <input type="tel" class="form-control" id="phone" name="phone"
+                                value="{{ user.phone or '' }}" maxlength="15">
+                        </div>
+                        <div class="col-12">
+                            <label for="avatar" class="form-label">Ảnh đại diện</label>
+                            <input type="file" class="form-control" id="avatar" name="avatar"
+                                accept="image/jpeg,image/png,image/webp">
+                            <div class="form-text">JPG, PNG hoặc WebP. Dung lượng tối đa 3 MB.</div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-light border" data-bs-toggle="collapse"
+                            data-bs-target="#profileEditForm">Hủy</button>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Lưu thay
+                            đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="card recruiter-profile-card">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h5 class="fw-bold mb-1"><i class="bi bi-shield-check me-2"></i>Bảo mật tài khoản</h5>
+                    <p class="text-secondary small mb-0">Thay đổi mật khẩu để bảo vệ tài khoản của bạn.</p>
+                </div>
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#passwordEditForm" aria-expanded="false" aria-controls="passwordEditForm">Đổi mật
+                    khẩu</button>
+            </div>
+            <div class="collapse mt-4 {% if show_password_form %}show{% endif %}" id="passwordEditForm">
+                <hr class="mb-4">
+                {% set errors = password_errors | default({}) %}
+                <form action="{{ url_for('recruiter.change_password') }}" method="POST" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="current_password" class="form-label">Mật khẩu hiện tại</label>
+                            <input type="password"
+                                class="form-control {% if errors.get('current_password') %}is-invalid{% endif %}"
+                                id="current_password" name="current_password" autocomplete="current-password"
+                                aria-describedby="currentPasswordError" required>
+                            {% if errors.get('current_password') %}
+                            <div class="invalid-feedback d-block" id="currentPasswordError">
+                                {{ errors['current_password'] }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="new_password" class="form-label">Mật khẩu mới</label>
+                            <input type="password"
+                                class="form-control {% if errors.get('new_password') %}is-invalid{% endif %}"
+                                id="new_password" name="new_password" minlength="8" maxlength="128"
+                                autocomplete="new-password" aria-describedby="newPasswordHelp newPasswordError"
+                                required>
+                            {% if errors.get('new_password') %}
+                            <div class="invalid-feedback d-block" id="newPasswordError">
+                                {{ errors['new_password'] }}
+                            </div>
+                            {% else %}
+                            <div class="form-text" id="newPasswordHelp">
+                                Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và chữ số.
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirm_password" class="form-label">Xác nhận mật khẩu mới</label>
+                            <input type="password"
+                                class="form-control {% if errors.get('confirm_password') %}is-invalid{% endif %}"
+                                id="confirm_password" name="confirm_password" minlength="8" maxlength="128"
+                                autocomplete="new-password" aria-describedby="confirmPasswordError" required>
+                            {% if errors.get('confirm_password') %}
+                            <div class="invalid-feedback d-block" id="confirmPasswordError">
+                                {{ errors['confirm_password'] }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if errors.get('general') %}
+                    <div class="text-danger small mt-3" role="alert">
+                        <i class="bi bi-exclamation-circle me-1"></i>{{ errors['general'] }}
+                    </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-light border" data-bs-toggle="collapse"
+                            data-bs-target="#passwordEditForm">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Cập nhật mật khẩu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

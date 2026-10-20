@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+
+{% block title %}{% if view_mode|default('list') == 'skills' %}Xác nhận kỹ năng - JobFit{% else %}CV của tôi - JobFit{%
+endif %}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/candidate.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="cv-page py-5 min-vh-100">
+    <div class="container">
+        {% if view_mode|default('list') == 'skills' %}
+        <!-- Header xác nhận kỹ năng -->
+        <div class="cv-review-header mb-4">
+            <a href="{{ url_for('candidate.my_cvs') }}"
+                class="d-inline-flex align-items-center gap-2 text-decoration-none small text-secondary mb-3">
+                <i class="bi bi-arrow-left"></i>Quản lý CV
+            </a>
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <h1 class="h4 fw-bold mb-0 cv-review-title">Kiểm tra kỹ năng CV</h1>
+                    <span class="cv-review-filename">
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span>{{ cv.file_name }}</span>
+                    </span>
+                </div>
+                <span
+                    class="badge rounded-pill {{ 'text-bg-success' if is_confirmed else 'cv-status-review' }} px-3 py-2 flex-shrink-0 align-self-start align-self-md-center">
+                    <i class="bi {{ 'bi-check-circle' if is_confirmed else 'bi-clock' }} me-1"></i>
+                    {{ 'Đã xác nhận' if is_confirmed else 'Chờ xác nhận' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Form xác nhận kỹ năng -->
+        <form method="POST" action="{{ url_for('candidate.confirm_cv_skills', cv_id=cv.cv_id) }}" id="skillConfirmForm"
+            data-manual-ids='{{ saved_manual_ids|list|tojson }}'>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-4">
+                <!-- Cột trái -->
+                <div class="col-lg-8">
+                    <!-- Kỹ năng nhận diện -->
+                    <div class="card cv-skill-card mb-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                <h2 class="h5 fw-bold mb-0"><i class="bi bi-check2-circle cv-section-icon me-2"></i>Kỹ
+                                    năng nhận diện</h2>
+                                <span class="badge rounded-pill cv-count-badge">{{ exact_skills|length }} kỹ năng</span>
+                            </div>
+                            <p class="text-secondary small mb-3">Các kỹ năng được tìm thấy trong CV. Bỏ chọn nếu kỹ năng
+                                không chính xác.</p>
+                            {% if exact_skills %}
+                            <div class="cv-skills-grid">
+                                {% for skill in exact_skills %}
+                                <label class="cv-skill-option d-flex align-items-center small">
+                                    <input class="form-check-input skill-checkbox" type="checkbox" name="skill_ids"
+                                        value="{{ skill.skill_id }}" data-source="EXACT" {% if not is_confirmed or
+                                        skill.skill_id in saved_ids %}checked{% endif %}>
+                                    <span class="cv-skill-name">
+                                        <span class="fw-medium">{{ skill.skill_name }}</span>
+                                        {% if skill.extracted_name != skill.skill_name %}
+                                        <span class="text-secondary">({{ skill.extracted_name }})</span>
+                                        {% endif %}
+                                    </span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="bg-light border rounded-3 p-3 small text-secondary">Chưa nhận diện được kỹ năng
+                                nào. Bạn có thể bổ sung bên dưới.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Bổ sung kỹ năng -->
+                    <div class="card cv-skill-card mb-4">
+                        <div class="card-body p-4">
+                            <h2 class="h5 fw-bold mb-2"><i class="bi bi-plus-circle cv-section-icon me-2"></i>Bổ sung kỹ
+                                năng</h2>
+                            <p class="text-secondary small mb-3">Tìm kỹ năng bạn biết nhưng hệ thống chưa nhận diện được
+                                trong CV.</p>
+                            <label for="manualSkillSearch" class="form-label fw-semibold small">Tìm kiếm trong danh mục
+                                kỹ năng</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i
+                                        class="bi bi-search text-secondary"></i></span>
+                                <input id="manualSkillSearch" type="search" class="form-control"
+                                    placeholder="Nhập tên kỹ năng, ví dụ: Docker, MySQL..." autocomplete="off"
+                                    aria-controls="manualSkillResults">
+                            </div>
+                            <div id="manualSkillResults" class="cv-search-results list-group mt-2 d-none"
+                                aria-live="polite"></div>
+                            <div class="d-flex align-items-center justify-content-between mt-4 mb-2">
+                                <span class="fw-semibold small">Kỹ năng bạn đã bổ sung</span>
+                                <span id="manualSkillCount" class="badge cv-count-badge">0</span>
+                            </div>
+                            <div id="manualSkillTags" class="d-flex flex-wrap gap-2" aria-live="polite"></div>
+                            <div id="manualSkillInputs"></div>
+                            <p id="manualSkillEmpty" class="small text-secondary mb-0">Chưa có kỹ năng bổ sung.</p>
+                            <select id="manualSkillCatalog" class="d-none" aria-hidden="true" tabindex="-1">
+                                {% for skill in all_skills %}
+                                <option value="{{ skill.skill_id }}">{{ skill.skill_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Kỹ năng gợi ý -->
+                    <div class="card cv-skill-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                <h2 class="h5 fw-bold mb-0"><i class="bi bi-lightbulb cv-section-icon me-2"></i>Kỹ năng
+                                    gợi ý</h2>
+                                <span class="badge rounded-pill cv-count-badge">{{ fuzzy_skills|length }} gợi ý</span>
+                            </div>
+                            <p class="text-secondary small mb-3">Hệ thống tìm thấy tên gần giống kỹ năng chuẩn. Chỉ chọn
+                                nếu gợi ý chính xác.</p>
+                            {% if fuzzy_skills %}
+                            <div class="row g-2">
+                                {% for skill in fuzzy_skills %}
+                                <div class="col-md-6">
+                                    <label class="cv-skill-option d-flex align-items-start gap-2 p-3 h-100">
+                                        <input class="form-check-input mt-1 skill-checkbox" type="checkbox"
+                                            name="skill_ids" value="{{ skill.skill_id }}" data-source="FUZZY" {% if
+                                            is_confirmed and skill.skill_id in saved_ids %}checked{% endif %}>
+                                        <span class="flex-grow-1">
+                                            <span class="fw-semibold">{{ skill.skill_name }}</span>
+                                            <span class="badge cv-count-badge ms-1">{{ skill.score }}%</span>
+                                            <span class="d-block small text-secondary mt-1">Trong CV: {{
+                                                skill.extracted_name }}</span>
+                                            {% if skill.context %}
+                                            <span class="d-block small text-secondary mt-1">Ngữ cảnh: {{ skill.context
+                                                }}</span>
+                                            {% endif %}
+                                        </span>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div
+                                class="d-flex align-items-center gap-2 bg-light border rounded-3 p-3 text-secondary small">
+                                <i class="bi bi-check-circle"></i>Không có gợi ý Fuzzy nào cần xác nhận.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột tổng quan -->
+                <div class="col-lg-4">
+                    <div class="card cv-skill-card cv-summary-card sticky-lg-top">
+                        <div class="card-body p-4">
+                            <h2 class="h5 fw-bold mb-1"><i class="bi bi-clipboard-data cv-section-icon me-2"></i>Tổng
+                                quan kỹ năng</h2>
+                            <p class="small text-secondary mb-4">Danh sách sẽ được lưu sau khi bạn xác nhận.</p>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="cv-stat-box rounded-3 p-3 text-center">
+                                        <div id="exactCount" class="cv-stat-number mb-1">0</div>
+                                        <div class="small text-secondary">Nhận diện</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="cv-stat-box rounded-3 p-3 text-center">
+                                        <div id="fuzzyCount" class="cv-stat-number mb-1">0</div>
+                                        <div class="small text-secondary">Gợi ý đã chọn</div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div
+                                        class="cv-stat-box rounded-3 p-3 d-flex justify-content-between align-items-center">
+                                        <span class="small text-secondary">Kỹ năng bổ sung</span>
+                                        <strong id="manualCount">0</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center border-top pt-3 mb-3">
+                                <span class="fw-semibold">Tổng kỹ năng đã chọn</span>
+                                <span id="totalSkillCount" class="cv-total-number">0</span>
+                            </div>
+                            <div class="bg-light rounded-3 p-3 mb-4">
+                                <p class="small text-secondary mb-0"><i class="bi bi-info-circle me-1"></i>Các kỹ năng
+                                    đã xác nhận sẽ được sử dụng để đối chiếu với yêu cầu tuyển dụng.</p>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2">
+                                <i class="bi bi-check-circle me-2"></i>Xác nhận và lưu kỹ năng
+                            </button>
+                            <a href="{{ url_for('candidate.my_cvs') }}"
+                                class="btn btn-outline-secondary w-100 mt-2">Quay lại, chưa lưu</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        {% else %}
+        <!-- Trang quản lý CV -->
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">Quản lý CV</h1>
+                <p class="text-secondary mb-0">Tải lên và quản lý các CV của bạn.</p>
+            </div>
+            <form method="POST" action="{{ url_for('candidate.upload_cv_file') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="file" id="cvFileTop" name="cv_file" accept=".pdf,.docx,.jpg,.jpeg,.png" class="d-none"
+                    onchange="this.form.submit()">
+                <label for="cvFileTop" class="btn btn-primary px-4 py-2"><i class="bi bi-cloud-arrow-up me-2"></i>Tải CV
+                    lên</label>
+            </form>
+        </div>
+
+        {% if cvs %}
+        <!-- Hướng dẫn -->
+        <div class="card cv-guide-card mb-4">
+            <div class="card-body p-4">
+                <div class="row g-3 text-center">
+                    <div class="col-md-4">
+                        <div class="cv-step-icon mx-auto mb-2"><i class="bi bi-cloud-arrow-up"></i></div>
+                        <div class="fw-semibold">1. Tải CV</div>
+                        <div class="small text-secondary">PDF, DOCX, JPG hoặc PNG</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="cv-step-icon mx-auto mb-2"><i class="bi bi-stars"></i></div>
+                        <div class="fw-semibold">2. Phân tích kỹ năng</div>
+                        <div class="small text-secondary">Nhận diện kỹ năng trong CV</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="cv-step-icon mx-auto mb-2"><i class="bi bi-briefcase"></i></div>
+                        <div class="fw-semibold">3. Tìm việc phù hợp</div>
+                        <div class="small text-secondary">Đối chiếu với yêu cầu tuyển dụng</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách CV -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <h2 class="h5 fw-bold mb-0">CV đã tải lên</h2>
+            <span class="badge rounded-pill cv-count-badge">{{ cvs|length }} CV</span>
+        </div>
+        <div class="row g-4">
+            {% for cv in cvs %}
+            <div class="col-12 col-xl-6">
+                <div class="card cv-item-card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="cv-file-icon flex-shrink-0">
+                                {% if cv.file_type == "PDF" %}
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                {% elif cv.file_type == "DOCX" %}
+                                <i class="bi bi-file-earmark-word"></i>
+                                {% else %}
+                                <i class="bi bi-file-earmark-image"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="d-flex flex-column flex-sm-row justify-content-between gap-2">
+                                    <div class="overflow-hidden">
+                                        <h3 class="h5 fw-bold text-truncate mb-1">{{ cv.file_name }}</h3>
+                                        <div class="small text-secondary">
+                                            <span class="me-3"><i class="bi bi-file-earmark me-1"></i>{{ cv.file_type
+                                                }}</span>
+                                            <span><i class="bi bi-calendar3 me-1"></i>{{
+                                                cv.uploaded_at.strftime("%d/%m/%Y") }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        {% if cv.analysis_status == "COMPLETED" %}
+                                        <span class="badge rounded-pill text-bg-success"><i
+                                                class="bi bi-check-circle me-1"></i>Đã phân tích</span>
+                                        {% elif cv.analysis_status == "FAILED" %}
+                                        <span class="badge rounded-pill text-bg-danger"><i
+                                                class="bi bi-exclamation-circle me-1"></i>Phân tích thất bại</span>
+                                        {% else %}
+                                        <span class="badge rounded-pill cv-status-pending"><i
+                                                class="bi bi-clock me-1"></i>Chưa phân tích</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    {% if cv.analysis_status == "COMPLETED" %}
+                                    <p class="small text-secondary mb-3">CV đã được JobFit phân tích. Bạn có thể xem kỹ
+                                        năng hoặc tìm công việc phù hợp.</p>
+                                    {% elif cv.analysis_status == "FAILED" %}
+                                    <p class="small text-secondary mb-3">JobFit chưa thể phân tích CV này. Bạn có thể
+                                        thử phân tích lại.</p>
+                                    {% else %}
+                                    <p class="small text-secondary mb-3">CV này chưa được xác nhận kỹ năng. Hãy bắt đầu
+                                        phân tích để sử dụng các tính năng phù hợp việc làm.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <div class="d-flex flex-column flex-sm-row gap-2">
+                            <a href="{{ url_for('candidate.view_cv', cv_id=cv.cv_id) }}" target="_blank" rel="noopener"
+                                class="btn btn-outline-primary">
+                                <i class="bi bi-eye me-2"></i>Xem CV
+                            </a>
+                            {% if cv.analysis_status == "COMPLETED" %}
+                            <a href="{{ url_for('candidate.review_cv_skills', cv_id=cv.cv_id) }}"
+                                class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-bar-chart me-2"></i>Xem kỹ năng
+                            </a>
+                            <a href="#" class="btn btn-outline-primary flex-grow-1" onclick="return false;"
+                                title="Chức năng đang phát triển">
+                                <i class="bi bi-briefcase me-2"></i>Tìm việc phù hợp
+                            </a>
+                            {% elif cv.extracted_text %}
+                            <a href="{{ url_for('candidate.review_cv_skills', cv_id=cv.cv_id) }}"
+                                class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-check2-square me-2"></i>Tiếp tục xác nhận
+                            </a>
+                            {% else %}
+                            <form method="POST" action="{{ url_for('candidate.analyze_cv', cv_id=cv.cv_id) }}"
+                                class="flex-grow-1">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-stars me-2"></i>{% if cv.analysis_status == "FAILED" %}Phân tích
+                                    lại{% else %}Phân tích CV{% endif %}
+                                </button>
+                            </form>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('candidate.delete_cv_file', cv_id=cv.cv_id) }}"
+                                onsubmit="return confirm('Bạn có chắc muốn xóa CV này không?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-outline-danger w-100" title="Xóa CV">
+                                    <i class="bi bi-trash"></i><span class="d-sm-none ms-2">Xóa CV</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Chưa có CV -->
+        <div class="card cv-empty-card">
+            <div class="card-body text-center px-4 py-5">
+                <div class="cv-empty-icon mx-auto mb-4"><i class="bi bi-file-earmark-arrow-up"></i></div>
+                <p class="text-secondary mx-auto mb-4 cv-empty-description">Chưa có CV nào được tải lên.</p>
+                <form method="POST" action="{{ url_for('candidate.upload_cv_file') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="file" id="cvFileEmpty" name="cv_file" accept=".pdf,.docx,.jpg,.jpeg,.png"
+                        class="d-none" onchange="this.form.submit()">
+                    <label for="cvFileEmpty" class="btn btn-primary px-4 py-2"><i
+                            class="bi bi-cloud-arrow-up me-2"></i>Tải CV lên</label>
+                </form>
+                <div class="small text-secondary mt-3"><i class="bi bi-shield-check me-1"></i>PDF, DOCX, JPG, PNG • Tối
+                    đa 10MB</div>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if view_mode|default('list') == 'skills' %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("skillConfirmForm");
+        const search = document.getElementById("manualSkillSearch");
+        const results = document.getElementById("manualSkillResults");
+        const catalogSelect = document.getElementById("manualSkillCatalog");
+        const tags = document.getElementById("manualSkillTags");
+        const inputs = document.getElementById("manualSkillInputs");
+        const empty = document.getElementById("manualSkillEmpty");
+        const checkboxes = document.querySelectorAll(".skill-checkbox");
+        const manual = new Set(JSON.parse(form.dataset.manualIds).map(String));
+        const catalog = Array.from(catalogSelect.options).map(option => ({
+            id: option.value,
+            name: option.textContent
+        }));
+        const detected = new Set(Array.from(checkboxes).map(input => input.value));
+
+        function updateSummary() {
+            const exact = Array.from(checkboxes).filter(input => input.checked && input.dataset.source === "EXACT").length;
+            const fuzzy = Array.from(checkboxes).filter(input => input.checked && input.dataset.source === "FUZZY").length;
+            const selected = new Set(Array.from(checkboxes).filter(input => input.checked).map(input => input.value));
+            manual.forEach(id => selected.add(id));
+            document.getElementById("exactCount").textContent = exact;
+            document.getElementById("fuzzyCount").textContent = fuzzy;
+            document.getElementById("manualCount").textContent = manual.size;
+            document.getElementById("manualSkillCount").textContent = manual.size;
+            document.getElementById("totalSkillCount").textContent = selected.size;
+        }
+
+        function renderManual() {
+            tags.replaceChildren();
+            inputs.replaceChildren();
+            empty.classList.toggle("d-none", manual.size > 0);
+            for (const id of manual) {
+                const item = catalog.find(skill => skill.id === id);
+                if (!item) continue;
+                const tag = document.createElement("span");
+                tag.className = "cv-manual-tag badge rounded-pill d-inline-flex align-items-center gap-2 px-3 py-2";
+                const name = document.createElement("span");
+                name.textContent = item.name;
+                const remove = document.createElement("button");
+                remove.type = "button";
+                remove.className = "btn-close";
+                remove.setAttribute("aria-label", "Bỏ kỹ năng " + item.name);
+                remove.addEventListener("click", function () {
+                    manual.delete(id);
+                    renderManual();
+                    renderSearch();
+                });
+                const hidden = document.createElement("input");
+                hidden.type = "hidden";
+                hidden.name = "manual_skill_ids";
+                hidden.value = id;
+                tag.append(name, remove);
+                tags.appendChild(tag);
+                inputs.appendChild(hidden);
+            }
+            updateSummary();
+        }
+
+        function renderSearch() {
+            results.replaceChildren();
+            const keyword = search.value.trim().toLocaleLowerCase();
+            if (!keyword) {
+                results.classList.add("d-none");
+                return;
+            }
+            results.classList.remove("d-none");
+            const matches = catalog.filter(skill =>
+                skill.name.toLocaleLowerCase().includes(keyword) && !manual.has(skill.id)
+            ).slice(0, 10);
+            if (!matches.length) {
+                const message = document.createElement("div");
+                message.className = "list-group-item text-secondary small";
+                message.textContent = "Không tìm thấy kỹ năng phù hợp.";
+                results.appendChild(message);
+                return;
+            }
+            for (const item of matches) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
+                const label = document.createElement("span");
+                label.textContent = item.name;
+                const icon = document.createElement("i");
+                icon.className = detected.has(item.id) ? "bi bi-check-circle text-secondary" : "bi bi-plus-circle text-secondary";
+                button.append(label, icon);
+                button.addEventListener("click", function () {
+                    if (detected.has(item.id)) {
+                        const checkbox = Array.from(checkboxes).find(input => input.value === item.id);
+                        if (checkbox) checkbox.checked = true;
+                        updateSummary();
+                    } else {
+                        manual.add(item.id);
+                        renderManual();
+                    }
+                    search.value = "";
+                    renderSearch();
+                    search.focus();
+                });
+                results.appendChild(button);
+            }
+        }
+
+        search.addEventListener("input", renderSearch);
+        checkboxes.forEach(input => input.addEventListener("change", updateSummary));
+        renderManual();
+        updateSummary();
+    });
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends "recruiter/recruiter_base.html" %}
+{% block title %}Đăng tin tuyển dụng | JobFit{% endblock %}
+{% block recruiter_content %}
+<div class="job-form-page">
+    <div class="mb-4">
+        <a href="{{ url_for('recruiter.my_jobs') }}" class="text-decoration-none small" style="color:#2563a6;"><i
+                class="bi bi-arrow-left me-1"></i> Quản lý tin tuyển dụng</a>
+        <h2 class="recruiter-page-title mt-3 mb-2">Đăng tin tuyển dụng</h2>
+        <p class="text-secondary mb-0">Cung cấp thông tin công việc để JobFit hỗ trợ nhận diện kỹ năng yêu cầu.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2 mb-4 small">
+        <span class="fw-semibold" style="color:#2563a6;">01. Thông tin JD</span>
+        <i class="bi bi-chevron-right text-secondary"></i>
+        <span class="text-secondary">02. Kiểm tra kỹ năng</span>
+        <i class="bi bi-chevron-right text-secondary"></i>
+        <span class="text-secondary">03. Xác nhận đăng tin</span>
+    </div>
+    <form method="POST" action="{{ url_for('recruiter.create_job') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="card job-form-card mb-4">
+            <div class="card-header">
+                <h5 class="fw-semibold mb-0"><i class="bi bi-briefcase me-2"></i>Thông tin vị trí tuyển dụng</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="job_title" class="form-label">Tiêu đề công việc <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="job_title" name="job_title" maxlength="200"
+                            value="{{ data.get('job_title', '') }}" placeholder="Ví dụ: Python Backend Developer"
+                            required>
+                        {% if errors.get('job_title') %}<div class="text-danger small mt-1">{{ errors.job_title }}
+                        </div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="job_category_id" class="form-label">Danh mục công việc <span
+                                class="text-danger">*</span></label>
+                        <select class="form-select" id="job_category_id" name="job_category_id" required>
+                            <option value="">Chọn danh mục</option>
+                            {% for category in categories %}
+                            <option value="{{ category.job_category_id }}" {% if
+                                data.get('job_category_id')==category.job_category_id|string %}selected{% endif %}>
+                                {{ category.category_name }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if errors.get('job_category_id') %}<div class="text-danger small mt-1">{{
+                            errors.job_category_id }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="level" class="form-label">Cấp bậc <span class="text-danger">*</span></label>
+                        <select class="form-select" id="level" name="level" required>
+                            <option value="">Chọn cấp bậc</option>
+                            {% for value, label in
+                            [('INTERN','Intern'),('FRESHER','Fresher'),('JUNIOR','Junior'),('MIDDLE','Middle'),('SENIOR','Senior'),('LEAD','Lead')]
+                            %}
+                            <option value="{{ value }}" {% if data.get('level')==value %}selected{% endif %}>{{
+                                label }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if errors.get('level') %}<div class="text-danger small mt-1">{{ errors.level }}</div>{%
+                        endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card job-form-card mb-4">
+            <div class="card-header">
+                <h5 class="fw-semibold mb-0"><i class="bi bi-file-text me-2"></i>Mô tả và yêu cầu công việc</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="job_description" class="form-label">Mô tả công việc <span
+                            class="text-danger">*</span></label>
+                    <textarea class="form-control" id="job_description" name="job_description" rows="6"
+                        placeholder="Mô tả nhiệm vụ, trách nhiệm và công việc hằng ngày..."
+                        required>{{ data.get('job_description', '') }}</textarea>
+                    {% if errors.get('job_description') %}<div class="text-danger small mt-1">{{
+                        errors.job_description }}</div>{% endif %}
+                </div>
+                <div>
+                    <label for="job_requirement" class="form-label">Yêu cầu ứng viên <span
+                            class="text-danger">*</span></label>
+                    <textarea class="form-control" id="job_requirement" name="job_requirement" rows="6"
+                        placeholder="Ví dụ: Thành thạo Python, FastAPI, SQL, Docker; có kinh nghiệm phát triển REST API..."
+                        required>{{ data.get('job_requirement', '') }}</textarea>
+                    {% if errors.get('job_requirement') %}<div class="text-danger small mt-1">{{
+                        errors.job_requirement }}</div>{% endif %}
+                </div>
+                <div class="rounded-3 p-3 mt-3 d-flex gap-2" style="background:#eef6ff;">
+                    <i class="bi bi-stars" style="color:#2563a6;"></i>
+                    <span class="small" style="color:#30465c;">JobFit sẽ phân tích nội dung JD và nhận diện các kỹ
+                        năng kỹ thuật dựa trên danh mục kỹ năng hiện có.</span>
+                </div>
+            </div>
+        </div>
+        <div class="card job-form-card mb-4">
+            <div class="card-header">
+                <h5 class="fw-semibold mb-0"><i class="bi bi-sliders me-2"></i>Điều kiện tuyển dụng</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="experience" class="form-label">Kinh nghiệm <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="experience" name="experience" maxlength="100"
+                            value="{{ data.get('experience', '') }}" placeholder="Ví dụ: 1–2 năm hoặc Không yêu cầu"
+                            required>
+                        {% if errors.get('experience') %}<div class="text-danger small mt-1">{{ errors.experience }}
+                        </div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="quantity" class="form-label">Số lượng tuyển <span
+                                class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" min="1" step="1"
+                            value="{{ data.get('quantity', '1') }}" required>
+                        {% if errors.get('quantity') %}<div class="text-danger small mt-1">{{ errors.quantity }}
+                        </div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="work_mode" class="form-label">Hình thức làm việc <span
+                                class="text-danger">*</span></label>
+                        <select class="form-select" id="work_mode" name="work_mode" required>
+                            <option value="">Chọn hình thức</option>
+                            {% for value, label in [('ONSITE','Tại văn phòng'),('REMOTE','Làm việc từ
+                            xa'),('HYBRID','Kết hợp')] %}
+                            <option value="{{ value }}" {% if data.get('work_mode')==value %}selected{% endif %}>{{
+                                label }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if errors.get('work_mode') %}<div class="text-danger small mt-1">{{ errors.work_mode }}
+                        </div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="job_type" class="form-label">Loại công việc <span
+                                class="text-danger">*</span></label>
+                        <select class="form-select" id="job_type" name="job_type" required>
+                            <option value="">Chọn loại công việc</option>
+                            {% for value, label in [('FULL_TIME','Toàn thời gian'),('PART_TIME','Bán thời
+                            gian'),('INTERNSHIP','Thực tập')] %}
+                            <option value="{{ value }}" {% if data.get('job_type')==value %}selected{% endif %}>{{
+                                label }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if errors.get('job_type') %}<div class="text-danger small mt-1">{{ errors.job_type }}
+                        </div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="min_salary" class="form-label">Lương tối thiểu (VNĐ)</label>
+                        <input type="number" class="form-control" id="min_salary" name="min_salary" min="0" step="1000"
+                            value="{{ data.get('min_salary', '') }}" placeholder="Ví dụ: 10000000">
+                        {% if errors.get('min_salary') %}<div class="text-danger small mt-1">{{ errors.min_salary }}
+                        </div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="max_salary" class="form-label">Lương tối đa (VNĐ)</label>
+                        <input type="number" class="form-control" id="max_salary" name="max_salary" min="0" step="1000"
+                            value="{{ data.get('max_salary', '') }}" placeholder="Ví dụ: 20000000">
+                        {% if errors.get('max_salary') %}<div class="text-danger small mt-1">{{ errors.max_salary }}
+                        </div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label for="location" class="form-label">Địa điểm làm việc <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="location" name="location" maxlength="255"
+                            value="{{ data.get('location', '') }}" placeholder="Ví dụ: Ninh Kiều, Cần Thơ" required>
+                        {% if errors.get('location') %}<div class="text-danger small mt-1">{{ errors.location }}
+                        </div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="working_time" class="form-label">Thời gian làm việc</label>
+                        <input type="text" class="form-control" id="working_time" name="working_time" maxlength="255"
+                            value="{{ data.get('working_time', '') }}" placeholder="Ví dụ: Thứ 2 – Thứ 6, 8:00 – 17:00">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="application_deadline" class="form-label">Hạn ứng tuyển <span
+                                class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="application_deadline" name="application_deadline"
+                            value="{{ data.get('application_deadline', '') }}" required>
+                        {% if errors.get('application_deadline') %}<div class="text-danger small mt-1">{{
+                            errors.application_deadline }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label for="benefit" class="form-label">Quyền lợi</label>
+                        <textarea class="form-control" id="benefit" name="benefit" rows="4"
+                            placeholder="Mô tả phúc lợi, bảo hiểm, thưởng, đào tạo...">{{ data.get('benefit', '') }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mb-4">
+            <a href="{{ url_for('recruiter.my_jobs') }}" class="btn btn-outline-secondary px-4">Hủy</a>
+            <button type="submit" class="btn btn-jobfit px-4">Phân tích kỹ năng <i
+                    class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+    </form>
+    {% if analyzed %}
+    <div class="card job-form-card mb-4" id="skill-results">
+        <div class="card-header">
+            <h5 class="fw-semibold mb-0"><i class="bi bi-stars me-2"></i>Kết quả nhận diện kỹ năng</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-secondary">Hệ thống nhận diện được <strong>{{ detected_skills|length }}</strong> kỹ năng
+                trong JD.</p>
+            {% if detected_skills %}
+            <div class="d-flex flex-wrap gap-2">
+                {% for skill in detected_skills %}
+                <span class="skill-chip">{{ skill.skill_name }}</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="mb-0 text-secondary">Chưa nhận diện được kỹ năng nào. Bạn có thể bổ sung thủ công ở bước xác
+                nhận kỹ năng sau này.</p>
+            {% endif %}
+            <div class="alert alert-info small mt-4 mb-0">Đây là kết quả phân tích thử. JD chưa được lưu. Bước tiếp
+                theo sẽ bổ sung màn hình chọn kỹ năng bắt buộc/ưu tiên và xác nhận đăng tin.</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+{% if analyzed %}
+<script>
+    document.getElementById("skill-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+</script>
+{% endif %}
+{% endblock %}

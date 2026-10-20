@@ -1,0 +1,220 @@
+{% extends "recruiter/recruiter_base.html" %}
+{% block title %}Chi tiết tin tuyển dụng | JobFit{% endblock %}
+{% block recruiter_content %}
+<div style="color:#30465c;">
+    <a href="{{ url_for('recruiter.my_jobs') }}" class="text-decoration-none small" style="color:#2563a6;">
+        <i class="bi bi-arrow-left me-1"></i>Quản lý tin tuyển dụng
+    </a>
+
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mt-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-2" style="color:#2563a6;">{{ job.job_title }}</h2>
+            <p class="text-secondary mb-2"><i class="bi bi-building me-2"></i>{{ company.company_name }}</p>
+            {% if status == 'OPEN' %}
+            <span class="badge text-bg-success">Đang tuyển</span>
+            {% elif status == 'CLOSED' %}
+            <span class="badge text-bg-secondary">Đã đóng</span>
+            {% elif status == 'EXPIRED' %}
+            <span class="badge text-bg-warning">Hết hạn</span>
+            {% elif status == 'HIDDEN' %}
+            <span class="badge text-bg-danger">Đã bị ẩn</span>
+            {% endif %}
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            {% if editing %}
+            <a href="{{ url_for('recruiter.job_detail', job_id=job.job_id) }}" class="btn btn-outline-secondary">Hủy
+                chỉnh sửa</a>
+            {% elif status == 'OPEN' %}
+            <a href="{{ url_for('recruiter.job_detail', job_id=job.job_id, edit=1) }}" class="btn btn-primary"><i
+                    class="bi bi-pencil-square me-1"></i>Chỉnh sửa</a>
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal"
+                data-bs-target="#closeJobModal">Đóng tin</button>
+            {% elif status == 'CLOSED' %}
+            <form method="POST" action="{{ url_for('recruiter.reopen_job', job_id=job.job_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-success">Mở lại tin</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-semibold mb-4">Thông tin tuyển dụng</h5>
+            {% if editing %}
+            <div class="alert alert-info small">{% if has_applications %}Tin đã có ứng viên: chỉ được tăng số lượng và
+                gia hạn nộp hồ sơ.{% else %}Bạn có thể chỉnh sửa thông tin tuyển dụng bên dưới. JD và kỹ năng không thay
+                đổi.{% endif %}
+            </div>
+            <form id="editJobForm" method="POST" action="{{ url_for('recruiter.edit_job', job_id=job.job_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% endif %}
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="text-secondary small">Danh mục công việc</div>
+                        <div class="fw-medium">{{ category.category_name if category else 'Chưa phân loại' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-secondary small">Cấp bậc</div>
+                        <div class="fw-medium">{{ job.level }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-secondary small">Kinh nghiệm</div>
+                        <div class="fw-medium">{{ job.experience }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-secondary small">Số lượng tuyển</div>
+                        {% if editing %}
+                        <input class="form-control" type="number" name="quantity"
+                            min="{{ job.quantity if has_applications else 1 }}" max="2147483647"
+                            value="{{ job.quantity }}" required>
+                        {% else %}<div class="fw-medium">{{ job.quantity }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-secondary small">Hình thức làm việc</div>
+                        <div class="fw-medium">
+                            {% if job.work_mode == 'ONSITE' %}Tại văn phòng
+                            {% elif job.work_mode == 'REMOTE' %}Từ xa
+                            {% elif job.work_mode == 'HYBRID' %}Kết hợp
+                            {% else %}{{ job.work_mode }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-secondary small">Loại công việc</div>
+                        <div class="fw-medium">
+                            {% if job.job_type == 'FULL_TIME' %}Toàn thời gian
+                            {% elif job.job_type == 'PART_TIME' %}Bán thời gian
+                            {% elif job.job_type == 'INTERNSHIP' %}Thực tập
+                            {% else %}{{ job.job_type }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-secondary small">Địa điểm</div>
+                        {% if editing and not has_applications %}
+                        <input class="form-control" type="text" name="location" maxlength="255"
+                            value="{{ job.location }}" required>
+                        {% else %}<div class="fw-medium">{{ job.location }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-secondary small">Hạn ứng tuyển</div>
+                        {% if editing %}
+                        <input class="form-control" type="date" name="application_deadline"
+                            min="{{ job.application_deadline.isoformat() if has_applications else today.isoformat() }}"
+                            value="{{ job.application_deadline.isoformat() }}" required>
+                        {% else %}<div class="fw-medium">{{ job.application_deadline.strftime('%d/%m/%Y') }}</div>{%
+                        endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-secondary small">Mức lương</div>
+                        {% if editing and not has_applications %}
+                        <div class="row g-2">
+                            <div class="col-6"><input class="form-control" type="number" name="min_salary" min="0"
+                                    max="9999999999999.99" step="0.01" placeholder="Lương từ (VNĐ)"
+                                    value="{{ job.min_salary if job.min_salary is not none else '' }}"></div>
+                            <div class="col-6"><input class="form-control" type="number" name="max_salary" min="0"
+                                    max="9999999999999.99" step="0.01" placeholder="Lương đến (VNĐ)"
+                                    value="{{ job.max_salary if job.max_salary is not none else '' }}"></div>
+                        </div>
+                        {% else %}
+                        <div class="fw-medium">
+                            {% if job.min_salary is not none and job.max_salary is not none %}
+                            {{ "{:,.0f}".format(job.min_salary) }} - {{ "{:,.0f}".format(job.max_salary) }} VNĐ
+                            {% elif job.min_salary is not none %}
+                            Từ {{ "{:,.0f}".format(job.min_salary) }} VNĐ
+                            {% elif job.max_salary is not none %}
+                            Đến {{ "{:,.0f}".format(job.max_salary) }} VNĐ
+                            {% else %}Thỏa thuận{% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-secondary small">Thời gian làm việc</div>
+                        {% if editing and not has_applications %}
+                        <input class="form-control" type="text" name="working_time" maxlength="255"
+                            value="{{ job.working_time or '' }}">
+                        {% else %}<div class="fw-medium">{{ job.working_time or 'Chưa cung cấp' }}</div>{% endif %}
+                    </div>
+                </div>
+                {% if editing %}
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <a class="btn btn-outline-secondary"
+                        href="{{ url_for('recruiter.job_detail', job_id=job.job_id) }}">Hủy</a>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Lưu thay
+                        đổi</button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-semibold mb-3"><i class="bi bi-file-text me-2"></i>Mô tả công việc</h5>
+            <div style="white-space:pre-line;overflow-wrap:anywhere;">{{ job.job_description }}</div>
+            <hr class="my-4">
+            <h5 class="fw-semibold mb-3"><i class="bi bi-list-check me-2"></i>Yêu cầu ứng viên</h5>
+            <div style="white-space:pre-line;overflow-wrap:anywhere;">{{ job.job_requirement }}</div>
+            <hr class="my-4">
+            <h5 class="fw-semibold mb-3"><i class="bi bi-gift me-2"></i>Quyền lợi</h5>
+            {% if editing and not has_applications %}
+            <textarea name="benefit" form="editJobForm" class="form-control" rows="5">{{ job.benefit or '' }}</textarea>
+            {% else %}
+            <div style="white-space:pre-line;overflow-wrap:anywhere;">{{ job.benefit or 'Chưa cung cấp' }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-semibold mb-4"><i class="bi bi-tools me-2"></i>Kỹ năng tuyển dụng</h5>
+            <h6 class="fw-semibold mb-3">Kỹ năng bắt buộc</h6>
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                {% for skill in required_skills %}
+                <span class="badge border px-3 py-2" style="background:#eef6ff;color:#2563a6;">{{ skill }}</span>
+                {% else %}
+                <span class="text-secondary small">Không có kỹ năng bắt buộc.</span>
+                {% endfor %}
+            </div>
+
+            <h6 class="fw-semibold mb-3">Kỹ năng ưu tiên</h6>
+            <div class="d-flex flex-wrap gap-2">
+                {% for skill in preferred_skills %}
+                <span class="badge border px-3 py-2" style="background:#f1f4f8;color:#30465c;">{{ skill }}</span>
+                {% else %}
+                <span class="text-secondary small">Không có kỹ năng ưu tiên.</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="text-end">
+        <a href="{{ url_for('recruiter.my_jobs') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Quay lại danh sách
+        </a>
+    </div>
+</div>
+
+{% if status == 'OPEN' %}
+<div class="modal fade" id="closeJobModal" tabindex="-1" aria-labelledby="closeJobModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 px-4 pt-4 pb-2">
+                <h5 class="modal-title fw-bold" id="closeJobModalLabel">Đóng tin tuyển dụng?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                Bạn có chắc muốn đóng tin <strong>{{ job.job_title }}</strong>?
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-2">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Hủy</button>
+                <form method="POST" action="{{ url_for('recruiter.close_job', job_id=job.job_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger px-4">Đóng tin</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

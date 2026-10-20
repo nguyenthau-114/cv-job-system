@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Thông tin công ty - JobFit{% endblock %}
+{% block content %}
+<section class="auth-page py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8 col-xl-7">
+                <div class="card auth-card border-0 shadow rounded-4 overflow-hidden">
+                    <!-- Header đồng bộ với các trang Authentication -->
+                    <div class="auth-card-header text-center px-4 py-4">
+                        <img src="{{ url_for('static', filename='images/jobfit-logo.png') }}" alt="JobFit Logo" width="72" height="72" class="object-fit-contain mb-3">
+                        <h1 class="h3 fw-bold mb-2">Thông tin công ty</h1>
+                        <p class="text-secondary mb-0">Cung cấp thông tin cơ bản để hoàn tất đăng ký nhà tuyển dụng.</p>
+                    </div>
+
+                    <div class="card-body bg-white p-4 p-md-5">
+                        <form method="POST" action="{{ url_for('auth.recruiter_company') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                            <div class="mb-3">
+                                <label for="company_name" class="form-label fw-semibold">Tên công ty</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="bi bi-building"></i></span>
+                                    <input type="text" class="form-control" id="company_name" name="company_name" value="{{ company_name | default('') }}" placeholder="Nhập tên công ty" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="address" class="form-label fw-semibold">Địa chỉ</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
+                                    <input type="text" class="form-control" id="address" name="address" value="{{ address | default('') }}" placeholder="Nhập địa chỉ công ty" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="website" class="form-label fw-semibold">Website <span class="text-secondary fw-normal small">(không bắt buộc)</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="bi bi-globe"></i></span>
+                                    <input type="url" class="form-control" id="website" name="website" value="{{ website | default('') }}" placeholder="https://...">
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="description" class="form-label fw-semibold">Mô tả công ty <span class="text-secondary fw-normal small">(không bắt buộc)</span></label>
+                                <textarea class="form-control" id="description" name="description" rows="5" placeholder="Giới thiệu ngắn về công ty">{{ description | default('') }}</textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold">Hoàn tất đăng ký</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

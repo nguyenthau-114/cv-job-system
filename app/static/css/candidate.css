@@ -1,0 +1,321 @@
+
+/* ===== JOBFIT - CANDIDATE ===== */
+.cv-page {
+    --cv-primary: var(--jobfit-primary, #2563a6);
+    --cv-pastel: var(--jobfit-pastel, #eef6ff);
+    --cv-border: #d1dbe6;
+    --cv-text: #30465c;
+    --cv-muted: #edf1f5;
+    background: #f8fafc;
+}
+
+/* ===== KHUNG CHUNG ===== */
+.cv-page .cv-guide-card,
+.cv-page .cv-item-card,
+.cv-page .cv-empty-card,
+.cv-page .cv-skill-card {
+    background: #fff;
+    border: 1px solid var(--cv-border);
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.045);
+    transition: none;
+    transform: none;
+}
+
+.cv-page .cv-guide-card:hover,
+.cv-page .cv-item-card:hover,
+.cv-page .cv-empty-card:hover,
+.cv-page .cv-skill-card:hover {
+    border-color: var(--cv-border);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.045);
+    transform: none;
+}
+
+.cv-page h1,
+.cv-page h2,
+.cv-page h3 {
+    color: var(--cv-text);
+}
+
+/* ===== HEADER XÁC NHẬN KỸ NĂNG ===== */
+.cv-review-header {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.cv-page .cv-review-title {
+    color: var(--cv-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.cv-review-filename {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+    padding: 6px 11px;
+    background: #edf1f5;
+    border: 1px solid #d8e0e9;
+    border-radius: 8px;
+    color: #526579;
+    font-size: 0.875rem;
+    overflow-wrap: anywhere;
+}
+
+.cv-page .cv-status-review {
+    background: #fff0d6;
+    color: #925b16;
+    border: 1px solid #e6bc72;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* ===== TIÊU ĐỀ VÀ BADGE ===== */
+.cv-section-icon {
+    color: var(--cv-primary);
+}
+
+.cv-count-badge {
+    background: #e9eef4;
+    border: 1px solid #d2dce7;
+    color: #43546a;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 6px 10px;
+}
+
+.cv-page-badge {
+    background: var(--cv-pastel);
+    color: var(--cv-primary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    padding: 10px 18px;
+}
+
+/* ===== KỸ NĂNG NHẬN DIỆN ===== */
+.cv-skills-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.cv-skill-option {
+    background: #f1f4f8;
+    border: 1px solid #cdd7e2;
+    border-radius: 9px;
+    color: var(--cv-text);
+    cursor: pointer;
+    transition: none;
+    transform: none;
+}
+
+.cv-skill-option:hover {
+    background: #f1f4f8;
+    border-color: #cdd7e2;
+    box-shadow: none;
+    transform: none;
+}
+
+.cv-skills-grid .cv-skill-option {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 12px;
+    gap: 8px;
+}
+
+.cv-skill-option .form-check-input {
+    flex-shrink: 0;
+    margin: 0;
+    border-color: #9cabbc;
+    box-shadow: none;
+    cursor: pointer;
+}
+
+.cv-skill-option .form-check-input:checked {
+    background-color: var(--cv-primary);
+    border-color: var(--cv-primary);
+}
+
+.cv-skill-option .form-check-input:focus-visible {
+    box-shadow: 0 0 0 0.15rem rgba(37, 99, 166, 0.15);
+}
+
+.cv-skill-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* ===== TÌM KIẾM VÀ BỔ SUNG KỸ NĂNG ===== */
+.cv-search-results {
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid var(--cv-border);
+    border-radius: 9px;
+}
+
+.cv-search-results .list-group-item {
+    border-left: 0;
+    border-right: 0;
+}
+
+.cv-search-results .list-group-item:first-child {
+    border-top: 0;
+}
+
+.cv-search-results .list-group-item:last-child {
+    border-bottom: 0;
+}
+
+.cv-search-results .list-group-item:hover {
+    background: #edf1f5;
+}
+
+.cv-manual-tag {
+    background: #e9eef4;
+    color: var(--cv-text);
+    border: 1px solid #cdd7e2;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.cv-manual-tag .btn-close {
+    font-size: 0.55rem;
+}
+
+/* ===== TỔNG QUAN KỸ NĂNG ===== */
+.cv-summary-card {
+    top: 100px;
+}
+
+.cv-stat-box {
+    background: #edf1f5;
+    border: 1px solid #d8e0e9;
+}
+
+.cv-stat-number {
+    font-size: 1.7rem;
+    line-height: 1.2;
+    font-weight: 700;
+    color: var(--cv-text);
+}
+
+.cv-total-number {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+    color: var(--cv-text);
+}
+
+/* ===== QUẢN LÝ CV ===== */
+.cv-file-icon,
+.cv-step-icon,
+.cv-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cv-pastel);
+    color: var(--cv-primary);
+}
+
+.cv-file-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 14px;
+    font-size: 1.65rem;
+}
+
+.cv-step-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 1.1rem;
+}
+
+.cv-empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    font-size: 2.25rem;
+}
+
+.cv-empty-description {
+    max-width: 620px;
+}
+
+.cv-status-pending {
+    background: #e9eef4;
+    color: #43546a;
+}
+
+.cv-step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--cv-pastel);
+    color: var(--cv-primary);
+    font-size: 0.8rem;
+}
+
+/* ===== MÀU CHỮ VÀ FORM ===== */
+.cv-page .bg-light {
+    background-color: #f0f3f7 !important;
+    border-color: #d8e0e9 !important;
+}
+
+.cv-page .text-secondary {
+    color: #5b6778 !important;
+}
+
+.cv-page .form-control,
+.cv-page .input-group-text {
+    border-color: #cdd7e2;
+}
+
+.cv-page .form-control:focus {
+    border-color: var(--cv-primary);
+    box-shadow: 0 0 0 0.15rem rgba(37, 99, 166, 0.1);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 991.98px) {
+    .cv-summary-card {
+        position: static !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .cv-skills-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .cv-page .cv-review-title {
+        font-size: 1.3rem;
+    }
+
+    .cv-skill-option {
+        max-width: 100%;
+    }
+
+    .cv-stat-number {
+        font-size: 1.4rem;
+    }
+
+    .cv-file-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .cv-skills-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% block title %}Khám phá việc làm IT - JobFit{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/jobs.css') }}">
+{% endblock %}
+{% block content %}
+<section class="jobs-page">
+    <!-- Thanh tìm kiếm ngang ngay dưới Header -->
+    <div class="jobs-search-bar">
+        <div class="container">
+            <form method="GET" action="{{ url_for('public_jobs.index') }}" id="jobSearchForm">
+                <div class="row g-2 align-items-center">
+                    <div class="col-lg-6">
+                        <div class="jobs-search-field">
+                            <i class="bi bi-search"></i>
+                            <input id="keyword" name="keyword" type="search" class="form-control" maxlength="150"
+                                value="{{ filters.keyword or '' }}" aria-label="Tìm kiếm công việc"
+                                placeholder="Vị trí tuyển dụng, kỹ năng, công ty...">
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="jobs-search-field">
+                            <i class="bi bi-geo-alt"></i>
+                            <input id="location" name="location" type="search" class="form-control" maxlength="150"
+                                value="{{ filters.location or '' }}" aria-label="Địa điểm làm việc"
+                                placeholder="Địa điểm làm việc">
+                        </div>
+                    </div>
+                    <div class="col-lg-2">
+                        <button type="submit" class="btn jobs-search-button w-100"><i class="bi bi-search me-2"></i>Tìm
+                            việc</button>
+                    </div>
+                </div>
+                <!-- Giữ các bộ lọc khi tìm kiếm từ khóa hoặc địa điểm -->
+                <input type="hidden" name="category" value="{{ filters.category or '' }}">
+                <input type="hidden" name="skill" value="{{ filters.skill or '' }}">
+                <input type="hidden" name="work_mode" value="{{ filters.work_mode or '' }}">
+                <input type="hidden" name="job_type" value="{{ filters.job_type or '' }}">
+                <input type="hidden" name="level" value="{{ filters.level or '' }}">
+                <input type="hidden" name="min_salary"
+                    value="{{ filters.min_salary if filters.min_salary is not none else '' }}">
+                <input type="hidden" name="max_salary"
+                    value="{{ filters.max_salary if filters.max_salary is not none else '' }}">
+                <input type="hidden" name="sort" value="{{ filters.sort or '' }}">
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Breadcrumb và giới thiệu -->
+        <div class="jobs-intro">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-3">
+                    <li class="breadcrumb-item"><a href="{{ url_for('home.home') }}">Trang chủ</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Việc làm IT</li>
+                </ol>
+            </nav>
+            <h1>Khám phá việc làm IT</h1>
+            <p>Tìm kiếm cơ hội nghề nghiệp phù hợp với kỹ năng và định hướng của bạn.</p>
+        </div>
+
+        <!-- Form bộ lọc riêng, giữ lại từ khóa và địa điểm -->
+        <form method="GET" action="{{ url_for('public_jobs.index') }}" id="jobFilterForm">
+            <input type="hidden" name="keyword" value="{{ filters.keyword or '' }}">
+            <input type="hidden" name="location" value="{{ filters.location or '' }}">
+            <div class="row g-4 jobs-main-layout">
+                <!-- Sidebar bộ lọc -->
+                <div class="col-lg-3">
+                    <aside class="jobs-filter-panel">
+                        <div class="jobs-filter-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="jobs-filter-header-icon"><i class="bi bi-sliders2"></i></span>
+                                <div>
+                                    <h2>Bộ lọc tìm kiếm</h2>
+                                    <p>Tùy chỉnh kết quả</p>
+                                </div>
+                            </div>
+                            <a href="{{ url_for('public_jobs.index') }}" class="jobs-reset-link">Xóa lọc</a>
+                        </div>
+                        <button class="btn jobs-filter-toggle d-lg-none w-100" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#jobsFilters" aria-expanded="false" aria-controls="jobsFilters">
+                            <i class="bi bi-funnel me-2"></i>Hiển thị bộ lọc<i class="bi bi-chevron-down ms-2"></i>
+                        </button>
+                        <div id="jobsFilters" class="collapse d-lg-block">
+                            <div class="jobs-filter-group">
+                                <label for="category"><i class="bi bi-grid me-2"></i>Lĩnh vực IT</label>
+                                <select id="category" name="category" class="form-select jobs-auto-filter">
+                                    <option value="">Tất cả lĩnh vực</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.job_category_id }}" {% if
+                                        filters.category|string==category.job_category_id|string %}selected{% endif %}>
+                                        {{ category.category_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="jobs-filter-group">
+                                <label for="skill"><i class="bi bi-code-square me-2"></i>Kỹ năng</label>
+                                <select id="skill" name="skill" class="form-select jobs-auto-filter">
+                                    <option value="">Tất cả kỹ năng</option>
+                                    {% for skill in skills %}
+                                    <option value="{{ skill.skill_id }}" {% if
+                                        filters.skill|string==skill.skill_id|string %}selected{% endif %}>{{
+                                        skill.skill_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="jobs-filter-group">
+                                <label for="workMode"><i class="bi bi-laptop me-2"></i>Hình thức làm việc</label>
+                                <select id="workMode" name="work_mode" class="form-select jobs-auto-filter">
+                                    <option value="">Tất cả hình thức</option>
+                                    {% for value, label in work_modes.items() %}
+                                    <option value="{{ value }}" {% if filters.work_mode==value %}selected{% endif %}>{{
+                                        label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="jobs-filter-group">
+                                <label for="jobType"><i class="bi bi-clock me-2"></i>Loại công việc</label>
+                                <select id="jobType" name="job_type" class="form-select jobs-auto-filter">
+                                    <option value="">Tất cả loại công việc</option>
+                                    {% for value, label in job_types.items() %}
+                                    <option value="{{ value }}" {% if filters.job_type==value %}selected{% endif %}>{{
+                                        label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="jobs-filter-group">
+                                <label for="level"><i class="bi bi-bar-chart-steps me-2"></i>Cấp bậc</label>
+                                <select id="level" name="level" class="form-select jobs-auto-filter">
+                                    <option value="">Tất cả cấp bậc</option>
+                                    {% for value, label in levels.items() %}
+                                    <option value="{{ value }}" {% if filters.level==value %}selected{% endif %}>{{
+                                        label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="jobs-filter-group">
+                                <label for="minSalary"><i class="bi bi-cash-stack me-2"></i>Mức lương <span
+                                        class="jobs-filter-unit">(triệu VNĐ)</span></label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <input id="minSalary" type="number" name="min_salary" min="0" max="1000000"
+                                            step="0.5" class="form-control jobs-auto-filter"
+                                            value="{{ filters.min_salary if filters.min_salary is not none else '' }}"
+                                            placeholder="Từ">
+                                    </div>
+                                    <div class="col-6">
+                                        <input id="maxSalary" type="number" name="max_salary" min="0" max="1000000"
+                                            step="0.5" class="form-control jobs-auto-filter"
+                                            value="{{ filters.max_salary if filters.max_salary is not none else '' }}"
+                                            placeholder="Đến">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+
+                <!-- Kết quả tìm kiếm -->
+                <div class="col-lg-9">
+                    <div class="jobs-results-header">
+                        <div>
+                            <div class="jobs-results-label">DANH SÁCH TUYỂN DỤNG</div>
+                            <h2>Việc làm dành cho bạn <span>{{ pagination.total }} công việc</span></h2>
+                        </div>
+                        <div class="jobs-sort-box">
+                            <label for="sort">Sắp xếp theo</label>
+                            <select id="sort" name="sort" class="form-select jobs-auto-filter">
+                                {% for value, label in sort_options.items() %}
+                                <option value="{{ value }}" {% if filters.sort==value %}selected{% endif %}>{{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="jobs-results-list">
+                        {% for job in jobs %}
+                        {% set company = companies.get(job.company_id) %}
+                        <article class="jobs-result-card">
+                            <div class="jobs-card-top">
+                                <div class="jobs-company-logo">
+                                    {% if company and company.logo %}
+                                    <img src="{{ url_for('static', filename=company.logo) }}"
+                                        alt="Logo {{ company.company_name }}" loading="lazy"
+                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    <i class="bi bi-buildings jobs-logo-fallback" style="display:none;"></i>
+                                    {% else %}
+                                    <i class="bi bi-buildings"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="jobs-card-heading">
+                                    <h3><a href="{{ url_for('public_jobs.show', job_id=job.job_id) }}">{{ job.job_title
+                                            }}</a></h3>
+                                    <p><i class="bi bi-building me-1"></i>{{ company.company_name if company else 'Chưa
+                                        cập nhật công ty' }}</p>
+                                </div>
+                                <span class="jobs-open-badge"><span></span>Đang tuyển</span>
+                            </div>
+                            <div class="jobs-card-meta">
+                                <div><i class="bi bi-cash-stack"></i><span>{{ salary_text(job) }}</span></div>
+                                <div><i class="bi bi-geo-alt"></i><span>{{ job.location }}</span></div>
+                                <div><i class="bi bi-briefcase"></i><span>{{ job.experience or 'Không yêu cầu' }}</span>
+                                </div>
+                            </div>
+                            <div class="jobs-card-tags">
+                                <span class="jobs-type-tag">{{ work_modes.get(job.work_mode, job.work_mode) }}</span>
+                                <span class="jobs-type-tag">{{ job_types.get(job.job_type, job.job_type) }}</span>
+                                {% for skill in skills_by_job.get(job.job_id, [])[:5] %}
+                                <span class="jobs-skill-tag">{{ skill.name }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="jobs-card-actions">
+                                <a href="{{ url_for('public_jobs.show', job_id=job.job_id) }}" class="jobs-detail-link">
+                                    Xem chi tiết <i class="bi bi-arrow-up-right ms-1"></i>
+                                </a>
+                                <a href="{{ url_for('public_jobs.show', job_id=job.job_id) }}"
+                                    class="btn jobs-apply-btn">
+                                    Ứng tuyển <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                                <button type="button" class="jobs-save-btn" data-job-id="{{ job.job_id }}"
+                                    aria-label="Lưu tin tuyển dụng" title="Lưu tin tuyển dụng">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+                            </div>
+                        </article>
+                        {% else %}
+                        <div class="jobs-empty-state">
+                            <div class="jobs-empty-illustration">
+                                <div class="jobs-empty-circle">
+                                    <i class="bi bi-search"></i>
+                                    <span class="jobs-empty-small-icon"><i class="bi bi-briefcase"></i></span>
+                                </div>
+                            </div>
+                            <h3>Chưa tìm thấy công việc phù hợp</h3>
+                            <p>Hiện chưa có tin tuyển dụng phù hợp với tiêu chí của bạn. Hãy thử điều chỉnh bộ lọc hoặc
+                                khám phá tất cả việc làm IT.</p>
+                            <a href="{{ url_for('public_jobs.index') }}" class="btn jobs-empty-button"><i
+                                    class="bi bi-arrow-clockwise me-2"></i>Xem tất cả việc làm</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Phân trang vẫn dùng các tham số đã lọc -->
+                    {% if pagination.pages > 1 %}
+                    <nav class="jobs-pagination" aria-label="Phân trang việc làm">
+                        <ul class="pagination justify-content-center flex-wrap">
+                            {% for number in pagination.iter_pages(left_edge=1, left_current=2, right_current=2,
+                            right_edge=1) %}
+                            {% if number %}
+                            <li class="page-item {% if number == pagination.page %}active{% endif %}">
+                                <a class="page-link"
+                                    href="{{ url_for('public_jobs.index', page=number, **page_params) }}">{{ number
+                                    }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("jobFilterForm");
+        if (!form) return;
+
+        // Tự động áp dụng tất cả điều kiện khi người dùng đổi bộ lọc.
+        form.querySelectorAll(".jobs-auto-filter").forEach(function (field) {
+            field.addEventListener("change", function () {
+                if (form.reportValidity()) form.requestSubmit();
+            });
+        });
+    });
+</script>
+{% endblock %}

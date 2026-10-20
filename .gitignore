@@ -31,3 +31,18 @@ Thumbs.db
 .mypy_cache/
 .coverage
 htmlcov/
+
+# Flask local instance data
+instance/
+
+# User-uploaded images (avatars, company logos, CVs)
+app/static/uploads/
+
+# Local databases
+*.db
+*.sqlite3
+
+# CV test data and generated results
+tests/CV/
+tests/cv_test_results.csv
+tests/fuzzy_cv_results.csv

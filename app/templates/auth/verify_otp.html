@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Xác thực email - JobFit{% endblock %}
+{% block content %}
+<section class="auth-page py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+                <div class="card auth-card auth-card-sm border-0 shadow rounded-4 overflow-hidden">
+                    <!-- Header đồng bộ với Login/Register -->
+                    <div class="auth-card-header text-center px-4 py-4">
+                        <img src="{{ url_for('static', filename='images/jobfit-logo.png') }}" alt="JobFit Logo" width="72" height="72" class="object-fit-contain mb-3">
+                        <h1 class="h3 fw-bold mb-2">Xác thực email</h1>
+                        <p class="text-secondary mb-0">Nhập mã OTP gồm 6 chữ số đã được gửi đến email của bạn.</p>
+                    </div>
+
+                    <div class="card-body bg-white p-4 p-md-5">
+                        <form method="POST" action="{{ url_for('auth.verify_email') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="mb-4">
+                                <label for="otp" class="form-label fw-semibold">Mã OTP</label>
+                                <input type="text" class="form-control form-control-lg text-center" id="otp" name="otp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg w-100 fw-semibold">Xác thực</button>
+                        </form>
+
+                        <!-- Gửi lại OTP bằng POST để vẫn được CSRF bảo vệ -->
+                        <form method="POST" action="{{ url_for('auth.resend_otp') }}" class="text-center mt-3">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <span class="text-secondary small">Chưa nhận được mã?</span>
+                            <button type="submit" class="btn btn-link btn-sm text-decoration-none fw-semibold p-1">Gửi lại OTP</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

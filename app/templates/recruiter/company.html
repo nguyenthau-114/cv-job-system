@@ -1,0 +1,128 @@
+{% extends "recruiter/recruiter_base.html" %}
+{% block title %}Thông tin công ty - JobFit{% endblock %}
+{% block recruiter_content %}
+<div class="recruiter-account-page">
+    <div class="mb-4">
+        <h1 class="recruiter-page-title mb-1">Thông tin công ty</h1>
+        <p class="text-secondary mb-0">Quản lý hồ sơ doanh nghiệp hiển thị trên JobFit.</p>
+    </div>
+    <div class="card recruiter-profile-card">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="recruiter-company-logo">
+                        {% if company.logo %}
+                        <img src="{{ url_for('static', filename=company.logo) }}" alt="Logo công ty">
+                        {% else %}
+                        <i class="bi bi-building"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1">{{ company.company_name }}</h5>
+                        <span class="text-secondary small">Hồ sơ doanh nghiệp</span>
+                    </div>
+                </div>
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#companyEditForm" aria-expanded="{{ 'true' if show_edit_form else 'false' }}"
+                    aria-controls="companyEditForm">
+                    <i class="bi bi-pencil-square me-1"></i>Chỉnh sửa
+                </button>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="text-secondary small mb-1">Tên công ty</div>
+                    <div class="fw-medium">{{ company.company_name }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-secondary small mb-1">Website</div>
+                    {% if company.website %}
+                    <a href="{{ company.website }}" target="_blank" rel="noopener noreferrer" class="text-break">{{
+                        company.website }}</a>
+                    {% else %}
+                    <div class="fw-medium">Chưa cập nhật</div>
+                    {% endif %}
+                </div>
+                <div class="col-12">
+                    <div class="text-secondary small mb-1">Địa chỉ</div>
+                    <div class="fw-medium">{{ company.address or 'Chưa cập nhật' }}</div>
+                </div>
+                <div class="col-12">
+                    <div class="text-secondary small mb-1">Giới thiệu công ty</div>
+                    <div class="recruiter-company-description">
+                        {{ company.company_description or 'Chưa có thông tin giới thiệu doanh nghiệp.' }}
+                    </div>
+                </div>
+            </div>
+            <div class="collapse mt-4 {% if show_edit_form %}show{% endif %}" id="companyEditForm">
+                <hr class="mb-4">
+                <h6 class="fw-bold mb-3">Cập nhật thông tin công ty</h6>
+                <form action="{{ url_for('recruiter.company_profile') }}" method="POST" enctype="multipart/form-data"
+                    novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if errors.get('general') %}
+                    <p class="text-danger small" role="alert">{{ errors['general'] }}</p>
+                    {% endif %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="company_name" class="form-label">Tên công ty <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" id="company_name" name="company_name" maxlength="150" required
+                                class="form-control {% if errors.get('company_name') %}is-invalid{% endif %}"
+                                value="{{ form_data.get('company_name', company.company_name) }}">
+                            {% if errors.get('company_name') %}
+                            <div class="invalid-feedback d-block">{{ errors['company_name'] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="website" class="form-label">Website</label>
+                            <input type="url" id="website" name="website" maxlength="255"
+                                class="form-control {% if errors.get('website') %}is-invalid{% endif %}"
+                                value="{{ form_data.get('website', company.website or '') }}"
+                                placeholder="https://example.com">
+                            {% if errors.get('website') %}
+                            <div class="invalid-feedback d-block">{{ errors['website'] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label for="address" class="form-label">Địa chỉ công ty <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" id="address" name="address" maxlength="255" required
+                                class="form-control {% if errors.get('address') %}is-invalid{% endif %}"
+                                value="{{ form_data.get('address', company.address or '') }}">
+                            {% if errors.get('address') %}
+                            <div class="invalid-feedback d-block">{{ errors['address'] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label for="company_description" class="form-label">Giới thiệu công ty</label>
+                            <textarea id="company_description" name="company_description" rows="5" maxlength="5000"
+                                class="form-control {% if errors.get('company_description') %}is-invalid{% endif %}"
+                                placeholder="Giới thiệu về lĩnh vực hoạt động, môi trường làm việc và doanh nghiệp...">{{ form_data.get('company_description', company.company_description or '') }}</textarea>
+                            {% if errors.get('company_description') %}
+                            <div class="invalid-feedback d-block">{{ errors['company_description'] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label for="logo" class="form-label">Logo công ty</label>
+                            <input type="file" id="logo" name="logo" accept="image/jpeg,image/png,image/webp"
+                                class="form-control {% if errors.get('logo') %}is-invalid{% endif %}">
+                            {% if errors.get('logo') %}
+                            <div class="invalid-feedback d-block">{{ errors['logo'] }}</div>
+                            {% else %}
+                            <div class="form-text">JPG, PNG hoặc WebP. Tối đa 3 MB. Nên sử dụng ảnh vuông.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-light border" data-bs-toggle="collapse"
+                            data-bs-target="#companyEditForm">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check2 me-1"></i>Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

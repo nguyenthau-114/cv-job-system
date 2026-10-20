@@ -1,0 +1,212 @@
+{% extends "recruiter/recruiter_base.html" %}
+{% block title %}Xác nhận đăng tin | JobFit{% endblock %}
+
+{% block recruiter_content %}
+<div style="color:#30465c;">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-2" style="color:#2563a6;">Xác nhận đăng tin tuyển dụng</h2>
+        <p class="text-secondary mb-3">Kiểm tra toàn bộ thông tin trước khi công khai tin tuyển dụng.</p>
+        <div class="d-flex flex-wrap align-items-center gap-2 small">
+            <span class="text-secondary">01. Nhập JD</span>
+            <i class="bi bi-chevron-right text-secondary"></i>
+            <span class="text-secondary">02. Kiểm tra kỹ năng</span>
+            <i class="bi bi-chevron-right text-secondary"></i>
+            <strong style="color:#2563a6;">03. Xác nhận đăng tin</strong>
+        </div>
+    </div>
+
+    <div class="card mb-4" style="border:1px solid #d1dbe6;border-radius:14px;">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+                <div>
+                    <h4 class="fw-bold mb-2">{{ data.job_title }}</h4>
+                    <p class="text-secondary mb-0">
+                        <i class="bi bi-building me-2"></i>{{ company.company_name }}
+                    </p>
+                </div>
+                <span class="badge border px-3 py-2" style="background:#eef6ff;color:#2563a6;">Sắp đăng tuyển</span>
+            </div>
+
+            <h5 class="fw-semibold mb-3">Thông tin tuyển dụng</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="small text-secondary">Danh mục công việc</div>
+                    <div class="fw-medium">{{ category.category_name }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-secondary">Cấp bậc</div>
+                    <div class="fw-medium">{{ data.level }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-secondary">Kinh nghiệm</div>
+                    <div class="fw-medium">{{ data.experience }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-secondary">Số lượng tuyển</div>
+                    <div class="fw-medium">{{ data.quantity }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-secondary">Hình thức làm việc</div>
+                    <div class="fw-medium">
+                        {% if data.work_mode == 'ONSITE' %}Tại văn phòng
+                        {% elif data.work_mode == 'REMOTE' %}Từ xa
+                        {% elif data.work_mode == 'HYBRID' %}Kết hợp
+                        {% else %}{{ data.work_mode }}{% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-secondary">Loại công việc</div>
+                    <div class="fw-medium">
+                        {% if data.job_type == 'FULL_TIME' %}Toàn thời gian
+                        {% elif data.job_type == 'PART_TIME' %}Bán thời gian
+                        {% elif data.job_type == 'INTERNSHIP' %}Thực tập
+                        {% else %}{{ data.job_type }}{% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-secondary">Địa điểm</div>
+                    <div class="fw-medium">{{ data.location }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-secondary">Hạn ứng tuyển</div>
+                    <div class="fw-medium">{{ data.application_deadline }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-secondary">Mức lương</div>
+                    <div class="fw-medium">
+                        {% if data.min_salary and data.max_salary %}
+                        {{ "{:,.0f}".format(data.min_salary|float) }} - {{ "{:,.0f}".format(data.max_salary|float)
+                        }} VNĐ
+                        {% elif data.min_salary %}
+                        Từ {{ "{:,.0f}".format(data.min_salary|float) }} VNĐ
+                        {% elif data.max_salary %}
+                        Đến {{ "{:,.0f}".format(data.max_salary|float) }} VNĐ
+                        {% else %}
+                        Thỏa thuận
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-secondary">Thời gian làm việc</div>
+                    <div class="fw-medium">{{ data.working_time or 'Chưa cung cấp' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4" style="border:1px solid #d1dbe6;border-radius:14px;">
+        <div class="card-body p-4">
+            <h5 class="fw-semibold mb-3"><i class="bi bi-file-text me-2"></i>Mô tả công việc</h5>
+            <div style="white-space:pre-line;overflow-wrap:anywhere;">{{ data.job_description }}</div>
+            <hr class="my-4">
+            <h5 class="fw-semibold mb-3"><i class="bi bi-list-check me-2"></i>Yêu cầu ứng viên</h5>
+            <div style="white-space:pre-line;overflow-wrap:anywhere;">{{ data.job_requirement }}</div>
+            <hr class="my-4">
+            <h5 class="fw-semibold mb-3"><i class="bi bi-gift me-2"></i>Quyền lợi</h5>
+            <div style="white-space:pre-line;overflow-wrap:anywhere;">{{ data.benefit or 'Chưa cung cấp' }}</div>
+        </div>
+    </div>
+
+    <div class="card mb-4" style="border:1px solid #d1dbe6;border-radius:14px;">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                <h5 class="fw-semibold mb-0"><i class="bi bi-tools me-2"></i>Kỹ năng tuyển dụng</h5>
+                <span class="text-secondary small">{{ selected_skills|length }} kỹ năng</span>
+            </div>
+
+            <h6 class="fw-semibold mb-3">Kỹ năng bắt buộc</h6>
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                {% for skill in selected_skills if skill.requirement_type == 'REQUIRED' %}
+                <span class="badge border px-3 py-2" style="background:#eef6ff;color:#2563a6;">{{ skill.skill_name
+                    }}</span>
+                {% else %}
+                <span class="text-secondary small">Không có kỹ năng bắt buộc.</span>
+                {% endfor %}
+            </div>
+
+            <h6 class="fw-semibold mb-3">Kỹ năng ưu tiên</h6>
+            <div class="d-flex flex-wrap gap-2">
+                {% for skill in selected_skills if skill.requirement_type == 'PREFERRED' %}
+                <span class="badge border px-3 py-2" style="background:#f1f4f8;color:#30465c;">{{ skill.skill_name
+                    }}</span>
+                {% else %}
+                <span class="text-secondary small">Không có kỹ năng ưu tiên.</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-light border d-flex align-items-start gap-2 mb-4" style="border-color:#d1dbe6!important;">
+        <i class="bi bi-info-circle mt-1" style="color:#2563a6;"></i>
+        <div class="small">
+            Sau khi xác nhận, tin tuyển dụng sẽ được đăng với trạng thái <strong>Đang tuyển</strong>.
+            Admin có thể ẩn tin nếu nội dung vi phạm quy định.
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <form method="POST" action="{{ url_for('recruiter.back_to_job_skills') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="publish_token" value="{{ publish_token }}">
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Quay lại chỉnh kỹ năng
+            </button>
+        </form>
+        <form id="publishJobForm" method="POST" action="{{ url_for('recruiter.publish_confirmed_job') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="publish_token" value="{{ publish_token }}">
+            <button type="button" class="btn text-white px-4" style="background:#2563a6;" data-bs-toggle="modal"
+                data-bs-target="#confirmPublishModal">
+                <i class="bi bi-check-circle me-1"></i>Đăng tin tuyển dụng
+            </button>
+        </form>
+        <!-- Modal xác nhận đăng tin, đồng bộ với modal Đóng tin -->
+        <div class="modal fade" id="confirmPublishModal" tabindex="-1" aria-labelledby="confirmPublishTitle"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow" style="border-radius:20px;">
+                    <div class="modal-header border-0 px-4 pt-4 pb-2">
+                        <h5 class="modal-title fw-bold" id="confirmPublishTitle" style="color:#1e293b;">
+                            Xác nhận đăng tin tuyển dụng?
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body px-4 py-3" style="color:#30465c;">
+                        Bạn có chắc muốn đăng tin <strong>{{ data.job_title }}</strong>?
+                    </div>
+                    <div class="modal-footer border-0 px-4 pt-3 pb-4 gap-2">
+                        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                            Hủy
+                        </button>
+                        <button id="publishJobButton" type="submit" form="publishJobForm" class="btn btn-danger px-4">
+                            Đăng tin
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    (() => {
+        const form = document.getElementById('publishJobForm');
+        const button = document.getElementById('publishJobButton');
+        if (!form || !button) return;
+
+        let submitting = false;
+        form.addEventListener('submit', (event) => {
+            if (submitting) {
+                event.preventDefault();
+                return;
+            }
+            submitting = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang đăng tin...';
+            button.disabled = true;
+        });
+    })();
+</script>
+{% endblock %}

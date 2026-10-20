@@ -1,0 +1,123 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Tổng quan | JobFit Admin{% endblock %}
+{% block page_title %}Tổng quan{% endblock %}
+{% block content %}
+<!-- 4 chỉ số tổng quan -->
+{% set cards = [
+('Tổng tin tuyển dụng', statistics.total_jobs, 'bi-briefcase', 'blue'),
+('Đang tuyển', statistics.open_jobs, 'bi-check-circle', 'green'),
+('Tin bị ẩn', statistics.hidden_jobs, 'bi-eye-slash', 'orange'),
+('Tài khoản bị khóa', statistics.locked_users, 'bi-lock', 'red')
+] %}
+<div class="row g-3">
+    {% for label, value, icon, color in cards %}
+    <div class="col-sm-6 col-xl-3">
+        <div class="card admin-stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="admin-stat-icon {{ color }}"><i class="bi {{ icon }}"></i></div>
+                <div class="min-w-0">
+                    <h3 class="fw-bold mb-1">{{ value }}</h3>
+                    <p class="text-secondary mb-0">{{ label }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<!-- Thống kê hoạt động tuyển dụng và người dùng -->
+<div class="row g-3 mt-2">
+    <div class="col-lg-8">
+        <div class="card admin-panel-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <h5 class="fw-bold mb-0">Thống kê tin tuyển dụng mới</h5>
+                    <span class="admin-panel-caption">6 tháng gần nhất</span>
+                </div>
+                <p class="text-secondary small mb-3">Số tin tuyển dụng mới được tạo theo từng tháng.</p>
+                <div class="admin-chart-wrap">
+                    <canvas id="jobMonthlyChart" data-labels='{{ monthly_labels | tojson }}'
+                        data-values='{{ monthly_values | tojson }}' role="img"
+                        aria-label="Biểu đồ số tin tuyển dụng mới trong 6 tháng gần nhất"></canvas>
+                </div>
+                <p class="admin-chart-note mb-0 mt-3">Tính cả tin đã đóng, hết hạn hoặc bị ẩn.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card admin-panel-card h-100">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-2">Người dùng hệ thống</h5>
+                <p class="text-secondary small mb-4">Số tài khoản theo vai trò.</p>
+                <div class="admin-summary-row">
+                    <div class="admin-summary-icon blue"><i class="bi bi-person"></i></div>
+                    <div>
+                        <strong>{{ statistics.candidates }}</strong>
+                        <div class="text-secondary small">Ứng viên</div>
+                    </div>
+                </div>
+                <div class="admin-summary-row">
+                    <div class="admin-summary-icon green"><i class="bi bi-person-badge"></i></div>
+                    <div>
+                        <strong>{{ statistics.recruiters }}</strong>
+                        <div class="text-secondary small">Nhà tuyển dụng</div>
+                    </div>
+                </div>
+                <p class="admin-chart-note mb-0 mt-4">Không bao gồm tài khoản Admin.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+<script>
+    // Lấy dữ liệu biểu đồ từ HTML, tránh lỗi Jinja2 trong JavaScript
+    const chartCanvas = document.getElementById('jobMonthlyChart');
+
+    if (chartCanvas && typeof Chart !== 'undefined') {
+        const monthlyLabels = JSON.parse(chartCanvas.dataset.labels);
+        const monthlyValues = JSON.parse(chartCanvas.dataset.values);
+
+        new Chart(chartCanvas, {
+            type: 'bar',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'Tin tuyển dụng mới',
+                    data: monthlyValues,
+                    backgroundColor: 'rgba(37, 99, 166, 0.78)',
+                    borderRadius: 6,
+                    maxBarThickness: 44
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: context => `${context.parsed.y} tin`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#65768b' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0,
+                            color: '#65768b'
+                        },
+                        grid: { color: '#edf1f5' }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

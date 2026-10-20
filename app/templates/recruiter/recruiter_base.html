@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/recruiter.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="recruiter-layout">
+    <!-- Sidebar dùng chung cho các trang Recruiter -->
+    <aside class="recruiter-sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="recruiterSidebar"
+        aria-labelledby="recruiterSidebarLabel">
+
+        <div class="offcanvas-header d-lg-none">
+            <h5 class="offcanvas-title fw-bold" id="recruiterSidebarLabel">Quản lý tuyển dụng</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#recruiterSidebar"
+                aria-label="Đóng"></button>
+        </div>
+
+        <div class="offcanvas-body d-flex flex-column p-3">
+
+            <!-- NHÓM QUẢN LÝ TUYỂN DỤNG -->
+            <div class="recruiter-sidebar-heading px-3 py-2 mb-2">NHÀ TUYỂN DỤNG</div>
+
+            <nav class="nav flex-column gap-1" aria-label="Menu nhà tuyển dụng">
+                <a class="recruiter-nav-link {% if request.endpoint == 'recruiter.dashboard' %}active{% endif %}"
+                    href="{{ url_for('recruiter.dashboard') }}" {% if request.endpoint=='recruiter.dashboard'
+                    %}aria-current="page" {% endif %}>
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Tổng quan</span>
+                </a>
+
+                <a class="recruiter-nav-link {% if request.endpoint in ['recruiter.my_jobs', 'recruiter.job_detail', 'recruiter.edit_job', 'recruiter.close_job', 'recruiter.reopen_job'] %}active{% endif %}"
+                    href="{{ url_for('recruiter.my_jobs') }}">
+                    <i class="bi bi-briefcase"></i>
+                    <span>Quản lý tin tuyển dụng</span>
+                </a>
+
+                <a class="recruiter-nav-link {% if request.endpoint in ['recruiter.create_job', 'recruiter.review_job_skills', 'recruiter.confirm_job', 'recruiter.back_to_job_skills', 'recruiter.publish_confirmed_job'] %}active{% endif %}"
+                    href="{{ url_for('recruiter.create_job') }}">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Đăng tin tuyển dụng</span>
+                </a>
+            </nav>
+
+            <!-- ĐƯỜNG PHÂN CÁCH HAI NHÓM -->
+            <div class="recruiter-sidebar-divider"></div>
+
+            <!-- NHÓM TÀI KHOẢN -->
+            <div class="recruiter-sidebar-heading px-3 py-2 mb-2">TÀI KHOẢN</div>
+
+            <nav class="nav flex-column gap-1" aria-label="Menu tài khoản nhà tuyển dụng">
+                <a class="recruiter-nav-link {% if request.endpoint in ['recruiter.account', 'recruiter.change_password'] %}active{% endif %}"
+                    href="{{ url_for('recruiter.account') }}" {% if request.endpoint in
+                    ['recruiter.account', 'recruiter.change_password' ] %}aria-current="page" {% endif %}>
+                    <i class="bi bi-person-circle"></i>
+                    <span>Thông tin cá nhân</span>
+                </a>
+
+                <a class="recruiter-nav-link {% if request.endpoint == 'recruiter.company_profile' %}active{% endif %}"
+                    href="{{ url_for('recruiter.company_profile') }}" {% if
+                    request.endpoint=='recruiter.company_profile' %}aria-current="page" {% endif %}>
+                    <i class="bi bi-building"></i>
+                    <span>Thông tin công ty</span>
+                </a>
+
+                <a class="recruiter-nav-link" href="{{ url_for('home.home') }}">
+                    <i class="bi bi-house"></i>
+                    <span>Về trang chủ</span>
+                </a>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Nội dung của từng trang Recruiter -->
+    <div class="recruiter-main">
+        <div class="d-lg-none mb-3">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#recruiterSidebar" aria-controls="recruiterSidebar">
+                <i class="bi bi-list me-1"></i>Menu quản lý
+            </button>
+        </div>
+
+        {% block recruiter_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

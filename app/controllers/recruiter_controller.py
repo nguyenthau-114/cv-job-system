@@ -20,8 +20,8 @@ from io import BytesIO
 from PIL import Image, UnidentifiedImageError
 from app.models.user import User
 from app.services.auth_service import validate_password
-from decimal import Decimal, InvalidOperation
 from urllib.parse import urlsplit
+from werkzeug.exceptions import HTTPException
 
 recruiter_bp = Blueprint("recruiter", __name__, url_prefix="/recruiter")
 PENDING_JOB_TTL = 1800
@@ -503,6 +503,7 @@ def job_detail(job_id):
         Application.job_id == job.job_id
     ).first() is not None
     can_edit = get_job_display_status(job) == "OPEN"
+    can_edit_content = can_edit and not has_applications and job.content_edit_count == 0
     editing = can_edit and request.args.get("edit") == "1"
     category = db.session.get(JobCategory, job.job_category_id)
 
@@ -535,6 +536,7 @@ def job_detail(job_id):
         status=get_job_display_status(job),
         has_applications=has_applications,
         can_edit=can_edit,
+        can_edit_content=can_edit_content,
         editing=editing,
         today=date.today()
     )
@@ -622,36 +624,41 @@ def reopen_job(job_id):
 
 # ================= CHỈNH SỬA TIN TUYỂN DỤNG =================
 
+def normalize_job_edit_text(value):
+    """Đồng nhất xuống dòng và khoảng trắng ngoài trước khi so sánh."""
+    return (value or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+
+
 def validate_job_edit(form, job, has_applications):
-    """Chỉ đọc các trường được phép, không nhận JD hoặc trạng thái từ client."""
+    """Mỗi action chỉ nhận đúng nhóm trường và quyền tương ứng."""
     errors, data = {}, {}
-    raw_quantity = (form.get("quantity") or "").strip()
-    try:
-        if not raw_quantity.isdecimal():
-            raise ValueError
-        quantity = int(raw_quantity)
-        if not 1 <= quantity <= 2147483647:
-            raise ValueError
-        if has_applications and quantity < job.quantity:
-            errors["quantity"] = "Đã có ứng viên: chỉ được tăng số lượng tuyển."
-        data["quantity"] = quantity
-    except ValueError:
-        errors["quantity"] = "Số lượng tuyển phải là số nguyên dương hợp lệ."
+    action = form.get("action")
+    action_fields = {
+        "edit_content": {"min_salary", "max_salary", "location", "working_time", "benefit"},
+        "increase_quantity": {"quantity"},
+        "extend_deadline": {"application_deadline"}
+    }
+    if action not in action_fields:
+        return {}, {"action": "Thao tác chỉnh sửa không hợp lệ."}
 
-    try:
-        deadline = date.fromisoformat(form.get("application_deadline") or "")
-        if deadline < date.today():
-            errors["application_deadline"] = "Hạn nộp không được ở quá khứ."
-        elif has_applications and deadline < job.application_deadline:
-            errors["application_deadline"] = "Đã có ứng viên: chỉ được gia hạn nộp hồ sơ."
-        data["application_deadline"] = deadline
-    except (TypeError, ValueError):
-        errors["application_deadline"] = "Hạn nộp không hợp lệ."
+    fields = action_fields[action]
+    # Không nhận bộ đếm, trường action khác hoặc giá trị lặp từ client.
+    if (
+        set(form) - fields - {"action", "csrf_token"}
+        or not fields.issubset(form)
+        or any(len(form.getlist(key)) != 1 for key in form)
+    ):
+        return {}, {"fields": "Dữ liệu không đúng với thao tác đã chọn."}
 
-    if not has_applications:
-        location = (form.get("location") or "").strip()
-        working_time = (form.get("working_time") or "").strip()
-        benefit = (form.get("benefit") or "").strip()
+    if action == "edit_content":
+        if has_applications:
+            return {}, {"content": "Tin đã từng có ứng viên: chỉ được tăng số lượng và gia hạn."}
+        if job.content_edit_count != 0:
+            return {}, {"content": "Tin đã hết lượt chỉnh sửa nội dung."}
+
+        location = normalize_job_edit_text(form.get("location"))
+        working_time = normalize_job_edit_text(form.get("working_time"))
+        benefit = normalize_job_edit_text(form.get("benefit"))
         if not 1 <= len(location) <= 255:
             errors["location"] = "Địa điểm phải có từ 1 đến 255 ký tự."
         if len(working_time) > 255:
@@ -666,7 +673,7 @@ def validate_job_edit(form, job, has_applications):
                 amount = Decimal(raw)
                 if not amount.is_finite() or amount < 0 or amount > Decimal("9999999999999.99"):
                     raise InvalidOperation
-                if amount.as_tuple().exponent < -2:
+                if amount != amount.quantize(Decimal("0.01")):
                     raise InvalidOperation
                 data[field] = amount
             except (InvalidOperation, ValueError):
@@ -674,6 +681,27 @@ def validate_job_edit(form, job, has_applications):
         minimum, maximum = data.get("min_salary"), data.get("max_salary")
         if minimum is not None and maximum is not None and minimum > maximum:
             errors["max_salary"] = "Lương tối đa phải lớn hơn hoặc bằng lương tối thiểu."
+    elif action == "increase_quantity":
+        raw_quantity = (form.get("quantity") or "").strip()
+        try:
+            if not raw_quantity.isdecimal():
+                raise ValueError
+            quantity = int(raw_quantity)
+            if not 1 <= quantity <= 2147483647:
+                raise ValueError
+            if quantity < job.quantity:
+                errors["quantity"] = "Chỉ được tăng số lượng tuyển, không được giảm."
+            data["quantity"] = quantity
+        except ValueError:
+            errors["quantity"] = "Số lượng tuyển phải là số nguyên dương hợp lệ."
+    else:
+        try:
+            deadline = date.fromisoformat(form.get("application_deadline") or "")
+            if deadline < date.today() or deadline < job.application_deadline:
+                errors["application_deadline"] = "Chỉ được gia hạn, không được rút ngắn thời hạn."
+            data["application_deadline"] = deadline
+        except (TypeError, ValueError):
+            errors["application_deadline"] = "Hạn nộp không hợp lệ."
     return data, errors
 
 
@@ -687,17 +715,22 @@ def edit_job(job_id):
     detail_url = url_for("recruiter.job_detail", job_id=job_id)
     edit_url = url_for("recruiter.job_detail", job_id=job_id, edit=1)
     try:
-        # Khóa Job để các lần cập nhật trạng thái/chỉnh sửa không ghi đè nhau.
-        job = Job.query.filter_by(job_id=job_id, company_id=company.company_id).with_for_update().first_or_404()
+        # Đọc lại dưới khóa, tránh dùng bộ đếm cũ khi hai request cùng lưu.
+        job = (
+            Job.query.filter_by(job_id=job_id, company_id=company.company_id)
+            .populate_existing().with_for_update().first_or_404()
+        )
         if get_job_display_status(job) != "OPEN":
             db.session.rollback()
             flash("Chỉ sửa được tin đang tuyển, còn hạn và không bị Admin ẩn.", "warning")
             return redirect(detail_url)
 
-        # Hồ sơ đã rút vẫn tính là tin từng có ứng viên.
-        has_applications = db.session.query(Application.application_id).filter(
-            Application.job_id == job_id
-        ).first() is not None
+        # Locking read lấy dữ liệu mới nhất, kể cả hồ sơ đã rút.
+        has_applications = False
+        if request.form.get("action") == "edit_content":
+            has_applications = db.session.query(Application.application_id).filter(
+                Application.job_id == job_id
+            ).with_for_update().first() is not None
         data, errors = validate_job_edit(request.form, job, has_applications)
         if errors:
             db.session.rollback()
@@ -705,11 +738,35 @@ def edit_job(job_id):
                 flash(message, "warning")
             return redirect(edit_url)
 
+        # So sánh dữ liệu chuẩn hóa; không mất lượt vì định dạng hoặc xuống dòng.
+        changes = {}
         for field, value in data.items():
+            previous = getattr(job, field)
+            if field in {"location", "working_time", "benefit"}:
+                previous = normalize_job_edit_text(previous) or None
+                value = normalize_job_edit_text(value) or None
+            if previous != value:
+                changes[field] = value
+        if not changes:
+            db.session.rollback()
+            flash("Không có thay đổi nào cần lưu. Bạn không mất lượt chỉnh sửa.", "info")
+            return redirect(detail_url)
+
+        for field, value in changes.items():
             setattr(job, field, value)
+        if request.form["action"] == "edit_content":
+            job.content_edit_count += 1
         db.session.commit()
-        flash("Cập nhật tin tuyển dụng thành công.", "success")
+        messages = {
+            "edit_content": "Cập nhật nội dung thành công. Bạn đã sử dụng lượt chỉnh sửa duy nhất.",
+            "increase_quantity": "Tăng số lượng tuyển thành công. Không mất lượt chỉnh sửa nội dung.",
+            "extend_deadline": "Gia hạn ứng tuyển thành công. Không mất lượt chỉnh sửa nội dung."
+        }
+        flash(messages[request.form["action"]], "success")
         return redirect(detail_url)
+    except HTTPException:
+        db.session.rollback()
+        raise
     except Exception:
         db.session.rollback()
         current_app.logger.exception("Không thể chỉnh sửa tin %s", job_id)

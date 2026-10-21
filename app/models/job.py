@@ -96,6 +96,14 @@ class Job(db.Model):
         default=False
     )
 
+    # Lượt sửa nội dung không được đặt lại khi đóng hoặc mở lại tin.
+    content_edit_count = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0,
+        server_default="0"
+    )
+
 
     # ==================== THÔNG TIN HỆ THỐNG ====================
 

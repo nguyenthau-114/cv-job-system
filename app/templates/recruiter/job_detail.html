@@ -39,17 +39,41 @@
         </div>
     </div>
 
+    <p class="small text-secondary mb-3">
+        {% if status == 'OPEN' %}
+        {% if has_applications %}Tin đã từng có ứng viên nên không thể chỉnh sửa nội dung, nhưng vẫn được tăng số lượng tuyển và gia hạn.
+        {% elif job.content_edit_count == 0 %}Bạn còn 1 lượt chỉnh sửa nội dung tin tuyển dụng.
+        {% else %}Đã hết lượt chỉnh sửa nội dung, nhưng vẫn được tăng số lượng tuyển và gia hạn.{% endif %}
+        {% if job.content_edit_count != 0 %}
+        Bạn có thể đóng tin cũ và <a href="{{ url_for('recruiter.create_job') }}">đăng tin mới</a>.
+        {% endif %}
+        {% elif status == 'CLOSED' %}Tin đã đóng, không thể chỉnh sửa hoặc điều chỉnh.
+        {% elif status == 'EXPIRED' %}Tin đã hết hạn, không thể chỉnh sửa hoặc điều chỉnh.
+        {% elif status == 'HIDDEN' %}Tin đã bị Admin ẩn, không thể chỉnh sửa hoặc điều chỉnh.
+        {% endif %}
+    </p>
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
             <h5 class="fw-semibold mb-4">Thông tin tuyển dụng</h5>
             {% if editing %}
-            <div class="alert alert-info small">{% if has_applications %}Tin đã có ứng viên: chỉ được tăng số lượng và
-                gia hạn nộp hồ sơ.{% else %}Bạn có thể chỉnh sửa thông tin tuyển dụng bên dưới. JD và kỹ năng không thay
-                đổi.{% endif %}
-            </div>
+            {% if can_edit_content %}
+            <div class="alert alert-warning small">Bạn chỉ được chỉnh sửa thông tin tin tuyển dụng 1 lần duy nhất. Vui lòng kiểm tra kỹ trước khi lưu.</div>
             <form id="editJobForm" method="POST" action="{{ url_for('recruiter.edit_job', job_id=job.job_id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                {% endif %}
+                <input type="hidden" name="action" value="edit_content">
+            </form>
+            {% else %}
+            <div class="alert alert-info small">Phần sửa nội dung đã khóa. Bạn vẫn được tăng số lượng tuyển và gia hạn bên dưới; hai thao tác này không mất lượt sửa nội dung.</div>
+            {% endif %}
+            <form id="increaseQuantityForm" method="POST" action="{{ url_for('recruiter.edit_job', job_id=job.job_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="increase_quantity">
+            </form>
+            <form id="extendDeadlineForm" method="POST" action="{{ url_for('recruiter.edit_job', job_id=job.job_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="extend_deadline">
+            </form>
+            {% endif %}
                 <div class="row g-4">
                     <div class="col-md-6">
                         <div class="text-secondary small">Danh mục công việc</div>
@@ -66,9 +90,11 @@
                     <div class="col-md-6">
                         <div class="text-secondary small">Số lượng tuyển</div>
                         {% if editing %}
-                        <input class="form-control" type="number" name="quantity"
-                            min="{{ job.quantity if has_applications else 1 }}" max="2147483647"
+                        <input class="form-control" type="number" name="quantity" form="increaseQuantityForm"
+                            min="{{ job.quantity }}" max="2147483647"
                             value="{{ job.quantity }}" required>
+                        <button type="submit" form="increaseQuantityForm" class="btn btn-outline-primary btn-sm mt-2">Tăng số lượng</button>
+                        <div class="small text-secondary mt-1">Không mất lượt sửa nội dung.</div>
                         {% else %}<div class="fw-medium">{{ job.quantity }}</div>{% endif %}
                     </div>
                     <div class="col-md-6">
@@ -91,28 +117,30 @@
                     </div>
                     <div class="col-md-6">
                         <div class="text-secondary small">Địa điểm</div>
-                        {% if editing and not has_applications %}
-                        <input class="form-control" type="text" name="location" maxlength="255"
+                        {% if editing and can_edit_content %}
+                        <input class="form-control" type="text" name="location" form="editJobForm" maxlength="255"
                             value="{{ job.location }}" required>
                         {% else %}<div class="fw-medium">{{ job.location }}</div>{% endif %}
                     </div>
                     <div class="col-md-6">
                         <div class="text-secondary small">Hạn ứng tuyển</div>
                         {% if editing %}
-                        <input class="form-control" type="date" name="application_deadline"
-                            min="{{ job.application_deadline.isoformat() if has_applications else today.isoformat() }}"
+                        <input class="form-control" type="date" name="application_deadline" form="extendDeadlineForm"
+                            min="{{ job.application_deadline.isoformat() }}"
                             value="{{ job.application_deadline.isoformat() }}" required>
+                        <button type="submit" form="extendDeadlineForm" class="btn btn-outline-primary btn-sm mt-2">Gia hạn</button>
+                        <div class="small text-secondary mt-1">Không mất lượt sửa nội dung.</div>
                         {% else %}<div class="fw-medium">{{ job.application_deadline.strftime('%d/%m/%Y') }}</div>{%
                         endif %}
                     </div>
                     <div class="col-md-6">
                         <div class="text-secondary small">Mức lương</div>
-                        {% if editing and not has_applications %}
+                        {% if editing and can_edit_content %}
                         <div class="row g-2">
-                            <div class="col-6"><input class="form-control" type="number" name="min_salary" min="0"
+                            <div class="col-6"><input class="form-control" type="number" name="min_salary" form="editJobForm" min="0"
                                     max="9999999999999.99" step="0.01" placeholder="Lương từ (VNĐ)"
                                     value="{{ job.min_salary if job.min_salary is not none else '' }}"></div>
-                            <div class="col-6"><input class="form-control" type="number" name="max_salary" min="0"
+                            <div class="col-6"><input class="form-control" type="number" name="max_salary" form="editJobForm" min="0"
                                     max="9999999999999.99" step="0.01" placeholder="Lương đến (VNĐ)"
                                     value="{{ job.max_salary if job.max_salary is not none else '' }}"></div>
                         </div>
@@ -130,20 +158,18 @@
                     </div>
                     <div class="col-md-6">
                         <div class="text-secondary small">Thời gian làm việc</div>
-                        {% if editing and not has_applications %}
-                        <input class="form-control" type="text" name="working_time" maxlength="255"
+                        {% if editing and can_edit_content %}
+                        <input class="form-control" type="text" name="working_time" form="editJobForm" maxlength="255"
                             value="{{ job.working_time or '' }}">
                         {% else %}<div class="fw-medium">{{ job.working_time or 'Chưa cung cấp' }}</div>{% endif %}
                     </div>
                 </div>
-                {% if editing %}
+                {% if editing and can_edit_content %}
                 <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
                     <a class="btn btn-outline-secondary"
                         href="{{ url_for('recruiter.job_detail', job_id=job.job_id) }}">Hủy</a>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Lưu thay
-                        đổi</button>
+                    <button type="submit" form="editJobForm" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Lưu nội dung</button>
                 </div>
-            </form>
             {% endif %}
         </div>
     </div>
@@ -157,7 +183,7 @@
             <div style="white-space:pre-line;overflow-wrap:anywhere;">{{ job.job_requirement }}</div>
             <hr class="my-4">
             <h5 class="fw-semibold mb-3"><i class="bi bi-gift me-2"></i>Quyền lợi</h5>
-            {% if editing and not has_applications %}
+            {% if editing and can_edit_content %}
             <textarea name="benefit" form="editJobForm" class="form-control" rows="5">{{ job.benefit or '' }}</textarea>
             {% else %}
             <div style="white-space:pre-line;overflow-wrap:anywhere;">{{ job.benefit or 'Chưa cung cấp' }}</div>

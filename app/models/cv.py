@@ -48,3 +48,11 @@ class CV(db.Model):
 
     # Nội dung chữ được trích xuất từ CV
     extracted_text = db.Column(LONGTEXT, nullable=True)
+
+    # Ẩn khỏi danh sách chọn CV, không thu hồi quyền xem hồ sơ đã nộp.
+    is_hidden = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        server_default="0"
+    )

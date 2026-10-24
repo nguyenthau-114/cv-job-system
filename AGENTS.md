@@ -72,6 +72,31 @@ Không tự ý tạo thư mục `routes/`, chuyển Blueprint hoặc tái cấu 
 ### Candidate
 - Bảo toàn chức năng hồ sơ, CV và các luồng ứng tuyển hiện tại.
 - Không thay đổi cách lưu trữ hoặc xử lý CV khi chưa kiểm tra các Service liên quan.
+- Candidate chỉ được ẩn CV của mình khi không có Application tham chiếu hoặc tất cả đơn tham chiếu có trạng thái chính xác REJECTED hoặc WITHDRAWN. Chặn ẩn nếu còn SUBMITTED, VIEWED, CONSIDERING, INTERVIEW hoặc bất kỳ trạng thái khác, kể cả NULL, chuỗi rỗng và trạng thái không xác định. Kiểm tra mọi đơn, kể cả khi CV đã có is_hidden = TRUE.
+- Candidate luôn được hiện lại CV thuộc tài khoản của mình, không chặn vì Application đang tham chiếu. Ẩn/hiện không thay đổi Application hoặc dữ liệu phân tích kỹ năng.
+- Lưu is_hidden trong database, NOT NULL và mặc định FALSE; CV hiện có giữ trạng thái hiển thị. Backend Giai đoạn 2.5B đã triển khai ẩn/hiện, thay CV và ghi nhận VIEWED; giao diện được triển khai ở giai đoạn sau.
+
+### Application — Quy tắc ứng tuyển đã chốt
+- Chỉ Candidate đăng nhập và đang hoạt động được nộp đơn vào tin OPEN, còn hạn, không bị Admin ẩn; phải kiểm tra lại tại thời điểm lưu.
+- Chỉ chọn CV đã lưu thuộc tài khoản Candidate và không bị ẩn, kể cả khi ứng tuyển mới hoặc thay CV đã nộp. Không upload trực tiếp trong form ứng tuyển và không bắt buộc CV đã phân tích kỹ năng xong.
+- Mỗi Candidate chỉ ứng tuyển một lần vào mỗi Job, kể cả đổi CV hoặc đơn đã rút. Database sử dụng unique constraint uq_application_user_job(user_id, job_id).
+- Họ tên, email và số điện thoại đều bắt buộc. Tự điền từ tài khoản nếu có, cho phép sửa, nhưng chỉ lưu thông tin riêng vào Application và không cập nhật User.
+- Thư giới thiệu không bắt buộc, tối đa 5.000 ký tự; kiểm tra độ dài tại backend khi triển khai luồng nộp đơn.
+- Candidate chưa có CV được hướng dẫn tới trang Quản lý CV.
+- Sau đăng nhập có thể quay lại đúng công việc/form ứng tuyển bằng next nội bộ đã kiểm tra an toàn, không tạo open redirect.
+- CV còn được bất kỳ Application nào tham chiếu không được xóa, kể cả đơn đã rút; phải giải thích rõ lý do và giữ nguyên file/lịch sử. Sau khi thay CV, CV cũ chỉ được xóa nếu không còn Application nào tham chiếu.
+- REJECTED và WITHDRAWN là hai trạng thái kết thúc cho phép ẩn CV nếu mọi đơn tham chiếu đều đã kết thúc; vẫn không cho xóa CV còn tham chiếu. Luồng ẩn CV phải giữ thứ tự khóa User → CV → Application, đồng bộ với nộp đơn và thay CV.
+- Candidate chỉ được thay CV khi Recruiter chưa xem hồ sơ, Application còn SUBMITTED. Không cho thay khi VIEWED, đang xử lý, REJECTED, WITHDRAWN hoặc trạng thái không xác định; CV thay thế phải thuộc Candidate và không bị ẩn.
+- Thay CV chỉ cập nhật cv_id của Application hiện tại, không tạo đơn mới. Giữ nguyên applied_at, thông tin liên hệ, thư giới thiệu, trạng thái và các trường khác của đơn.
+- Không cho trạng thái đã xem hoặc xử lý quay lại SUBMITTED. Việc đánh dấu đã xem phải được thực hiện tại backend của luồng Recruiter mở hồ sơ/CV, không dựa vào trạng thái đọc thông báo.
+- Job đã từng có Application không được sửa nội dung. Tăng số lượng và gia hạn vẫn theo điều kiện OPEN, còn hạn, không bị ẩn.
+- quantity là số lượng cần tuyển, không giới hạn số Application và không bị giảm khi nhận đơn.
+- Nộp đơn không tự xác nhận kỹ năng, không đánh dấu CV đã phân tích xong và không thay đổi quy trình CV–JD.
+- Recruiter chỉ được xem đơn, thông tin liên hệ, thư giới thiệu và CV thuộc Job của công ty mình. Chưa triển khai duyệt/từ chối hoặc mời phỏng vấn.
+- Recruiter vẫn được xem CV đã nộp qua Application thuộc Job của công ty mình, kể cả khi Candidate ẩn CV sau khi đơn kết thúc. Không dùng bộ lọc CV được phép chọn để chặn truy cập hồ sơ đã nộp.
+- Card /jobs có Xem nhanh, Xem chi tiết, Ứng tuyển ngay và Yêu thích. Yêu thích giữ nguyên hiện trạng, chưa triển khai backend.
+- Trang danh sách và trang chi tiết dùng chung form và backend ứng tuyển. Đây là quy tắc đích, chỉ triển khai theo từng giai đoạn đã được phê duyệt.
+- Không thêm cascade xóa Application theo User, CV hoặc Job. Migration phải kiểm tra dữ liệu cũ trước DDL, không tự xóa, gộp hoặc tạo thông tin giả.
 
 ### Admin
 - Sử dụng layout riêng.

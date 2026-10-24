@@ -5,7 +5,7 @@ import time
 from datetime import date, datetime
 from pathlib import Path
 
-from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for, abort
+from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for, abort, jsonify, send_file
 from app.extensions import db
 from app.middleware.auth_middleware import role_required
 from app.models.company import Company
@@ -20,11 +20,57 @@ from io import BytesIO
 from PIL import Image, UnidentifiedImageError
 from app.models.user import User
 from app.services.auth_service import validate_password
+from app.services.application_service import open_recruiter_application
 from urllib.parse import urlsplit
 from werkzeug.exceptions import HTTPException
 
 recruiter_bp = Blueprint("recruiter", __name__, url_prefix="/recruiter")
 PENDING_JOB_TTL = 1800
+
+
+def _open_application_response(application_id, with_cv=False):
+    # POST có CSRF: tải trước URL không được tự đánh dấu hồ sơ đã xem.
+    if (
+        request.files or set(request.form) - {"csrf_token"}
+        or any(len(request.form.getlist(key)) != 1 for key in request.form)
+    ):
+        return jsonify(success=False, errors={"application": "Yêu cầu xem hồ sơ không hợp lệ."}), 400
+    result, errors = open_recruiter_application(session["user_id"], application_id, with_cv=with_cv)
+    if errors:
+        statuses = {"account": 403, "application": 404, "cv": 404, "concurrency": 409, "database": 503}
+        return jsonify(success=False, errors=errors), statuses.get(next(iter(errors)), 400)
+    if with_cv:
+        cv_file = result["cv_file"]
+        mimetypes = {
+            "PDF": "application/pdf", "DOCX": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "JPG": "image/jpeg", "JPEG": "image/jpeg", "PNG": "image/png",
+        }
+        try:
+            response = send_file(
+                cv_file, download_name=result["cv_name"], as_attachment=False,
+                mimetype=mimetypes.get(result["file_type"], "application/octet-stream"),
+            )
+        except (OSError, ValueError):
+            cv_file.close()
+            return jsonify(success=False, errors={"cv": "Không thể gửi file CV đã nộp."}), 503
+        response.call_on_close(cv_file.close)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+    else:
+        response = jsonify(success=True, application=result)
+    response.headers["Cache-Control"] = "private, no-store"
+    return response
+
+
+@recruiter_bp.route("/applications/<int:application_id>/open", methods=["POST"])
+@role_required("RECRUITER")
+def open_application(application_id):
+    return _open_application_response(application_id)
+
+
+@recruiter_bp.route("/applications/<int:application_id>/cv", methods=["POST"])
+@role_required("RECRUITER")
+def open_application_cv(application_id):
+    return _open_application_response(application_id, with_cv=True)
 
 
 def get_recruiter_company():

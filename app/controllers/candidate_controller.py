@@ -1,7 +1,7 @@
 
 from datetime import datetime, timezone
 
-from flask import Blueprint, render_template, session, request, flash, redirect, url_for, send_file
+from flask import Blueprint, render_template, session, request, flash, redirect, url_for, send_file, jsonify
 
 from app.extensions import db
 from app.middleware.auth_middleware import role_required
@@ -12,12 +12,68 @@ from app.services.cv_service import (
     get_user_cv,
     upload_cv,
     delete_cv,
+    set_cv_visibility,
     save_extracted_text
 )
 from app.services.skill_extractor import extract_skills
 from app.services.fuzzy_matcher import extract_fuzzy_skills_db, get_fuzzy_context
+from app.services.application_service import submit_application, replace_application_cv
 
 candidate_bp = Blueprint("candidate", __name__, url_prefix="/candidate")
+
+
+@candidate_bp.route("/cvs/<int:cv_id>/visibility", methods=["POST"])
+@role_required("CANDIDATE")
+def change_cv_visibility(cv_id):
+    """Nhận trạng thái tường minh để request gửi lại không đảo trạng thái CV."""
+    if (
+        request.files or set(request.form) - {"is_hidden", "csrf_token"}
+        or any(len(request.form.getlist(key)) != 1 for key in request.form)
+        or request.form.get("is_hidden") not in {"0", "1"}
+    ):
+        return jsonify(success=False, errors={"is_hidden": "Trạng thái CV không hợp lệ."}), 400
+    is_hidden = request.form["is_hidden"] == "1"
+    success, message = set_cv_visibility(session["user_id"], cv_id, is_hidden)
+    if not success:
+        return jsonify(success=False, errors={"cv": message}), 400
+    return jsonify(success=True, is_hidden=is_hidden, message=message)
+
+
+@candidate_bp.route("/applications/<int:application_id>/cv", methods=["POST"])
+@role_required("CANDIDATE")
+def change_application_cv(application_id):
+    """Chỉ nhận CV đã lưu, không nhận trạng thái hoặc thông tin liên hệ mới."""
+    if (
+        request.files or set(request.form) - {"cv_id", "csrf_token"}
+        or any(len(request.form.getlist(key)) != 1 for key in request.form)
+    ):
+        return jsonify(success=False, errors={"cv_id": "Chỉ được chọn một CV đã lưu."}), 400
+    result, errors = replace_application_cv(
+        session["user_id"], application_id, request.form.get("cv_id")
+    )
+    if errors:
+        statuses = {"account": 403, "application": 404, "state": 409, "concurrency": 409, "database": 503}
+        return jsonify(success=False, errors=errors), statuses.get(next(iter(errors)), 400)
+    return jsonify(success=True, **result)
+
+
+@candidate_bp.route("/jobs/<int:job_id>/apply", methods=["POST"])
+@role_required("CANDIDATE")
+def apply_job(job_id):
+    """Backend dùng chung cho form ở danh sách và chi tiết trong giai đoạn sau."""
+    if request.files:
+        return jsonify(success=False, errors={
+            "cv_id": "Chỉ chọn CV đã lưu. Không tải CV mới trong form ứng tuyển."
+        }), 400
+    application, errors = submit_application(session["user_id"], job_id, request.form)
+    if errors:
+        return jsonify(
+            success=False, errors=errors, manage_cvs_url=url_for("candidate.my_cvs")
+        ), 400
+    return jsonify(
+        success=True, application_id=application.application_id,
+        message="Ứng tuyển thành công."
+    ), 201
 
 
 @candidate_bp.route("/")

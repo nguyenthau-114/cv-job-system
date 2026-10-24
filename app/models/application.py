@@ -10,6 +10,13 @@ class Application(db.Model):
     # Khóa chính của hồ sơ ứng tuyển
     application_id = db.Column(db.Integer, primary_key=True)
 
+    # Candidate sở hữu đơn, dùng để chống nộp trùng dù thay đổi CV.
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.user_id", name="fk_application_user_id_users"),
+        nullable=False
+    )
+
     # FK: ứng viên đã dùng CV nào để ứng tuyển
     cv_id = db.Column(
         db.Integer,
@@ -24,11 +31,17 @@ class Application(db.Model):
         nullable=False
     )
 
+    # Thông tin liên hệ riêng của đơn, không đồng bộ ngược vào tài khoản.
+    contact_name = db.Column(db.String(100), nullable=False)
+
     # Email để nhà tuyển dụng liên hệ với ứng viên
     contact_email = db.Column(
         db.String(255),
         nullable=False
     )
+
+    contact_phone = db.Column(db.String(20), nullable=False)
+    cover_letter = db.Column(db.Text, nullable=True)
 
     # SUBMITTED / VIEWED / CONSIDERING /
     # INTERVIEW / REJECTED / WITHDRAWN
@@ -49,4 +62,11 @@ class Application(db.Model):
     withdrawn_at = db.Column(
         db.DateTime,
         nullable=True
+    )
+
+    # Hồ sơ đã rút vẫn giữ ràng buộc một Candidate chỉ ứng tuyển một lần/Job.
+    __table_args__ = (
+        db.UniqueConstraint(
+            "user_id", "job_id", name="uq_application_user_job"
+        ),
     )

@@ -8,9 +8,13 @@ from docx import Document
 from flask import current_app
 from PIL import Image, UnidentifiedImageError
 from werkzeug.utils import secure_filename
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.extensions import db
 from app.models.cv import CV
+from app.models.application import Application
+from app.models.candidate_skill import CandidateSkill
+from app.models.user import User
 
 
 # Đường dẫn Tesseract OCR đã cài trên Windows.
@@ -91,6 +95,40 @@ def get_user_cvs(user_id):
         .order_by(CV.uploaded_at.desc())
         .all()
     )
+
+
+def set_cv_visibility(user_id, cv_id, is_hidden):
+    """Chỉ ẩn khi mọi đơn tham chiếu đã kết thúc, luôn cho phép hiện lại CV."""
+    if type(is_hidden) is not bool:
+        return False, "Trạng thái ẩn CV không hợp lệ."
+    try:
+        user = User.query.filter_by(user_id=user_id).populate_existing().with_for_update().first()
+        if user is None or user.role != "CANDIDATE" or user.user_status != "ACTIVE":
+            db.session.rollback()
+            return False, "Chỉ Candidate đang hoạt động được ẩn hoặc hiện CV."
+        cv = CV.query.filter_by(cv_id=cv_id, user_id=user_id).populate_existing().with_for_update().first()
+        if cv is None:
+            db.session.rollback()
+            return False, "Không tìm thấy CV hoặc bạn không có quyền thay đổi."
+        if is_hidden:
+            # Khóa User → CV → Application; đọc trực tiếp trạng thái mới nhất từ DB.
+            applications = db.session.query(Application.application_status).filter(
+                Application.cv_id == cv_id
+            ).order_by(Application.application_id).with_for_update().all()
+            # So sánh chính xác tại Python, không phụ thuộc collation hoặc bỏ lọt NULL.
+            if any(row.application_status not in {"REJECTED", "WITHDRAWN"} for row in applications):
+                db.session.rollback()
+                return False, "Không thể ẩn CV vì còn hồ sơ ứng tuyển chưa kết thúc hoặc có trạng thái không hợp lệ."
+        if cv.is_hidden == is_hidden:
+            db.session.rollback()
+        else:
+            cv.is_hidden = is_hidden
+            db.session.commit()
+        return True, "Đã ẩn CV." if is_hidden else "Đã hiện CV."
+    except SQLAlchemyError as error:
+        db.session.rollback()
+        current_app.logger.error("Không thể đổi trạng thái ẩn CV (%s).", type(error).__name__)
+        return False, "Không thể thay đổi trạng thái CV. Vui lòng thử lại."
 
 
 def get_user_cv(user_id, cv_id):
@@ -305,23 +343,26 @@ def upload_cv(user_id, file):
 
 def delete_cv(user_id, cv_id):
     """Xóa CV thuộc đúng Candidate đang đăng nhập."""
-
-    # Chỉ cho phép xóa CV của chính User.
-    cv = CV.query.filter_by(
-        cv_id=cv_id,
-        user_id=user_id
-    ).first()
-
-    if cv is None:
-        return (
-            False,
-            "Không tìm thấy CV hoặc bạn không có quyền xóa CV này."
-        )
-
-    file_path = cv.file_path
-
+    linked_message = (
+        "Không thể xóa CV vì đã được sử dụng trong đơn ứng tuyển, kể cả đơn đã rút. "
+        "CV và lịch sử ứng tuyển phải được giữ nguyên."
+    )
     try:
-        # Xóa bản ghi khỏi database.
+        user = User.query.filter_by(user_id=user_id).populate_existing().with_for_update().first()
+        if user is None or user.role != "CANDIDATE" or user.user_status != "ACTIVE":
+            db.session.rollback()
+            return False, "Chỉ Candidate đang hoạt động được xóa CV."
+        # Dùng cùng khóa CV với luồng nộp đơn, bảo toàn cả file khi có tham chiếu.
+        cv = CV.query.filter_by(cv_id=cv_id, user_id=user_id).populate_existing().with_for_update().first()
+        if cv is None:
+            db.session.rollback()
+            return False, "Không tìm thấy CV hoặc bạn không có quyền xóa CV này."
+        if Application.query.filter_by(cv_id=cv_id).with_for_update().first() is not None:
+            db.session.rollback()
+            return False, linked_message
+        file_path = cv.file_path
+        # Chỉ xóa kỹ năng của CV không có đơn, trong cùng transaction xóa CV.
+        CandidateSkill.query.filter_by(cv_id=cv_id).delete(synchronize_session=False)
         db.session.delete(cv)
         db.session.commit()
 
@@ -331,6 +372,9 @@ def delete_cv(user_id, cv_id):
 
         return True, "Xóa CV thành công."
 
+    except IntegrityError:
+        db.session.rollback()
+        return False, "Không thể xóa CV đang được tham chiếu. CV và lịch sử liên quan được giữ nguyên."
     except Exception:
         db.session.rollback()
 

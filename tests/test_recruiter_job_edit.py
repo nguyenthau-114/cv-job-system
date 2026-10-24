@@ -170,14 +170,21 @@ class RecruiterJobEditTests(unittest.TestCase):
         self.assertEqual(self.job.job_requirement, "Original requirements")
 
     def add_application(self, status="SUBMITTED"):
+        candidate = User(
+            user_name="Candidate test", email=f"candidate-{Application.query.count()}@example.invalid",
+            password_hash="unused", role="CANDIDATE", phone="0900000000"
+        )
+        db.session.add(candidate)
+        db.session.flush()
         cv = CV(
-            user_id=self.user.user_id, file_name="synthetic.pdf",
+            user_id=candidate.user_id, file_name="synthetic.pdf",
             file_path="not-used.pdf", file_type="PDF"
         )
         db.session.add(cv)
         db.session.flush()
         db.session.add(Application(
-            cv_id=cv.cv_id, job_id=self.job_id,
+            user_id=candidate.user_id, cv_id=cv.cv_id, job_id=self.job_id,
+            contact_name=candidate.user_name, contact_phone=candidate.phone,
             contact_email="candidate@example.invalid", application_status=status
         ))
         db.session.commit()
@@ -484,7 +491,7 @@ class RecruiterJobEditTests(unittest.TestCase):
         html = self.client.get(self.url + "?edit=1").get_data(as_text=True)
         parser = FormParser(html)
         self.assertFalse(parser.nested)
-        self.assertIn(WARNING, html)
+        self.assertIn(WARNING, " ".join(html.split()))
         self.assertIn("còn 1 lượt", html)
         for form_id, action, fields in (
             ("editJobForm", "edit_content", {"min_salary", "max_salary", "location", "working_time", "benefit"}),
@@ -564,7 +571,9 @@ class RecruiterJobEditTests(unittest.TestCase):
             self.assertNotIn(values["revision"], revisions)
             revisions[values["revision"]] = values["down_revision"]
         self.assertEqual(revisions["c21e4d8f6a01"], "ba1c91ecc416")
-        self.assertEqual(set(revisions) - set(revisions.values()), {"c21e4d8f6a01"})
+        self.assertEqual(revisions["a22f6b9d3e02"], "c21e4d8f6a01")
+        self.assertEqual(revisions["b73d8a4c9f10"], "a22f6b9d3e02")
+        self.assertEqual(set(revisions) - set(revisions.values()), {"b73d8a4c9f10"})
         column = Job.__table__.c.content_edit_count
         self.assertFalse(column.nullable)
         self.assertEqual(column.default.arg, 0)

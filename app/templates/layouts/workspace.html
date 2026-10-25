@@ -1,0 +1,32 @@
+{% extends "layouts/base.html" %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/workspace.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="workspace-layout {{ workspace_role }}-layout">
+    <!-- Khung sidebar dùng chung, menu do layout từng vai trò cung cấp. -->
+    <aside class="workspace-sidebar {{ workspace_role }}-sidebar offcanvas-lg offcanvas-start" tabindex="-1"
+        id="{{ workspace_sidebar_id }}" aria-labelledby="{{ workspace_sidebar_id }}Label">
+        <div class="offcanvas-header d-lg-none">
+            <h5 class="offcanvas-title fw-bold" id="{{ workspace_sidebar_id }}Label">{{ workspace_sidebar_title }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
+                data-bs-target="#{{ workspace_sidebar_id }}" aria-label="Đóng"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column p-3">
+            {% block workspace_menu %}{% endblock %}
+        </div>
+    </aside>
+    <div class="workspace-main {{ workspace_role }}-main">
+        <div class="d-lg-none mb-3">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#{{ workspace_sidebar_id }}" aria-controls="{{ workspace_sidebar_id }}">
+                <i class="bi bi-list me-1"></i>Menu quản lý
+            </button>
+        </div>
+        {% block workspace_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

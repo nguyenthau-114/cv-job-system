@@ -1,12 +1,16 @@
 
 /* ===== JOBFIT - CANDIDATE ===== */
+.candidate-layout {
+    color: var(--workspace-text);
+}
+
 .cv-page {
     --cv-primary: var(--jobfit-primary, #2563a6);
     --cv-pastel: var(--jobfit-pastel, #eef6ff);
     --cv-border: #d1dbe6;
     --cv-text: #30465c;
     --cv-muted: #edf1f5;
-    background: #f8fafc;
+    background: var(--workspace-bg, #f8fafc);
 }
 
 /* ===== KHUNG CHUNG ===== */

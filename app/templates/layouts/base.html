@@ -80,14 +80,13 @@
                             <div class="account-dropdown-actions">
                                 {% if header_user.role == 'ADMIN' %}
                                 <a class="dropdown-item" href="{{ url_for('admin.dashboard') }}"><i
-                                        class="bi bi-speedometer2"></i> Trang quản trị</a>
+                                        class="bi bi-grid-1x2"></i> Trang quản trị</a>
                                 {% elif header_user.role == 'RECRUITER' %}
                                 <a class="dropdown-item" href="{{ url_for('recruiter.dashboard') }}"><i
-                                        class="bi bi-briefcase me-2"></i>Quản lý tuyển dụng</a>
-
-                                {% else %}
-                                <span class="dropdown-item-text text-secondary"><i class="bi bi-person me-2"></i>Ứng
-                                    viên</span>
+                                        class="bi bi-grid-1x2"></i> Trang quản lý tuyển dụng</a>
+                                {% elif header_user.role == 'CANDIDATE' %}
+                                <a class="dropdown-item" href="{{ url_for('candidate.dashboard') }}"><i
+                                        class="bi bi-grid-1x2"></i> Trang quản lý ứng viên</a>
                                 {% endif %}
                                 <div class="dropdown-divider"></div>
                                 <form method="POST" action="{{ url_for('auth.logout') }}">

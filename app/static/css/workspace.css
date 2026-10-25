@@ -1,0 +1,138 @@
+
+/* =========================
+   WORKSPACE - LAYOUT
+========================= */
+.workspace-layout {
+    --workspace-bg: #f7f9fc;
+    --workspace-surface: #ffffff;
+    --workspace-text: #30465c;
+    --workspace-heading: #183b63;
+    --workspace-border: #e5eaf0;
+    --workspace-active: #305b85;
+    --workspace-hover: #eaf3fc;
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    min-height: calc(100vh - 74px);
+    padding: 24px;
+    background: var(--workspace-bg);
+}
+
+/* Sidebar trắng, bo góc, chỉ cao theo nội dung */
+.workspace-layout .workspace-sidebar {
+    --bs-offcanvas-bg: var(--workspace-surface);
+    --bs-offcanvas-color: var(--workspace-text);
+    width: 260px;
+    flex: 0 0 260px;
+    position: sticky;
+    top: 98px;
+    align-self: flex-start;
+    height: auto;
+    background: var(--workspace-surface);
+    color: var(--workspace-text);
+    border: 1px solid var(--workspace-border);
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(24, 59, 99, .08);
+}
+
+/* Nội dung sidebar */
+.workspace-sidebar .offcanvas-body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* Tiêu đề nhóm */
+.workspace-sidebar-heading {
+    color: var(--workspace-heading);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .7px;
+}
+/* Đường phân cách giữa nhóm tuyển dụng và tài khoản */
+.workspace-sidebar-divider {
+    height: 1px;
+    margin: 16px 12px 12px;
+    background-color: var(--workspace-border);
+    flex-shrink: 0;
+}
+
+/* Các mục điều hướng */
+.workspace-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    color: var(--workspace-text);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color .2s, color .2s;
+}
+
+.workspace-nav-link i {
+    width: 20px;
+    font-size: 17px;
+    text-align: center;
+}
+
+/* Hiệu ứng khi rê chuột */
+.workspace-nav-link:hover {
+    background: var(--workspace-hover);
+    color: var(--workspace-heading);
+}
+
+/* Mục đang được chọn */
+.workspace-nav-link.active,
+.workspace-nav-link.active:hover {
+    background: var(--workspace-active);
+    color: var(--workspace-surface);
+    font-weight: 600;
+}
+
+/* =========================
+   WORKSPACE - MAIN CONTENT
+========================= */
+.workspace-main {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 0 40px;
+}
+
+/* =========================
+   WORKSPACE - RESPONSIVE
+========================= */
+@media (max-width: 991.98px) {
+    .workspace-layout {
+        display: block;
+        padding: 20px 16px;
+    }
+
+    /* Sidebar chuyển thành menu trượt trên điện thoại */
+    .workspace-layout .workspace-sidebar {
+        width: 280px;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        border: 0;
+        border-radius: 0;
+        overflow-y: auto;
+    }
+
+    /* Tiêu đề menu trên điện thoại */
+    .workspace-sidebar .offcanvas-header,
+    .workspace-sidebar .offcanvas-title {
+        color: var(--workspace-heading);
+    }
+
+    /* Nút đóng menu */
+    .workspace-sidebar .btn-close {
+        filter: none;
+    }
+
+    .workspace-main {
+        padding: 0 0 24px;
+    }
+}

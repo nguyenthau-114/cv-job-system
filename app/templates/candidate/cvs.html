@@ -1,15 +1,11 @@
-{% extends "base.html" %}
+{% extends "candidate/candidate_base.html" %}
 
 {% block title %}{% if view_mode|default('list') == 'skills' %}Xác nhận kỹ năng - JobFit{% else %}CV của tôi - JobFit{%
 endif %}{% endblock %}
 
-{% block styles %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/candidate.css') }}">
-{% endblock %}
-
-{% block content %}
-<section class="cv-page py-5 min-vh-100">
-    <div class="container">
+{% block candidate_content %}
+<section class="cv-page">
+    <div>
         {% if view_mode|default('list') == 'skills' %}
         <!-- Header xác nhận kỹ năng -->
         <div class="cv-review-header mb-4">
@@ -360,6 +356,7 @@ endif %}{% endblock %}
 {% endblock %}
 
 {% block scripts %}
+{{ super() }}
 {% if view_mode|default('list') == 'skills' %}
 <script>
     document.addEventListener("DOMContentLoaded", function () {

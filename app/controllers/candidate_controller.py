@@ -17,7 +17,7 @@ from app.services.cv_service import (
 )
 from app.services.skill_extractor import extract_skills
 from app.services.fuzzy_matcher import extract_fuzzy_skills_db, get_fuzzy_context
-from app.services.application_service import submit_application, replace_application_cv
+from app.services.application_service import submit_application, replace_application_cv, get_candidate_dashboard
 
 candidate_bp = Blueprint("candidate", __name__, url_prefix="/candidate")
 
@@ -80,7 +80,8 @@ def apply_job(job_id):
 @role_required("CANDIDATE")
 def dashboard():
     """Trang tổng quan Candidate."""
-    return render_template("candidate/dashboard.html")
+    dashboard_data = get_candidate_dashboard(session["user_id"])
+    return render_template("candidate/dashboard.html", **dashboard_data)
 
 
 @candidate_bp.route("/cvs")

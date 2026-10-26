@@ -3,6 +3,7 @@ import re
 from datetime import date
 
 from flask import current_app
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.extensions import db
@@ -15,6 +16,40 @@ from app.models.user import User
 
 DUPLICATE_MESSAGE = "Bạn đã ứng tuyển công việc này. Đơn đã rút vẫn được tính là đã ứng tuyển."
 SAVE_ERROR = "Không thể lưu đơn ứng tuyển. Vui lòng thử lại."
+
+
+def get_candidate_dashboard(user_id):
+    """Đọc thống kê và năm đơn gần nhất, không thay đổi CV hoặc Application."""
+    # Đếm theo chủ CV và chủ đơn riêng biệt, không suy ra chủ đơn qua CV.
+    cv_count = CV.query.filter_by(user_id=user_id).count()
+    status_counts = dict(
+        db.session.query(Application.application_status, func.count(Application.application_id))
+        .filter(Application.user_id == user_id)
+        .group_by(Application.application_status)
+        .all()
+    )
+    statistics = {
+        "cvs": cv_count,
+        "applications": sum(status_counts.values()),
+        "reviewing": sum(status_counts.get(status, 0) for status in (
+            "SUBMITTED", "VIEWED", "CONSIDERING", "INTERVIEW"
+        )),
+        "viewed": status_counts.get("VIEWED", 0),
+    }
+    recent_applications = (
+        db.session.query(
+            Application.application_id, Application.applied_at, Application.application_status,
+            Job.job_title, Company.company_name,
+        )
+        .select_from(Application)
+        .join(Job, Job.job_id == Application.job_id)
+        .join(Company, Company.company_id == Job.company_id)
+        .filter(Application.user_id == user_id)
+        .order_by(Application.applied_at.desc(), Application.application_id.desc())
+        .limit(5)
+        .all()
+    )
+    return {"statistics": statistics, "recent_applications": recent_applications}
 
 
 def _parse_cv_id(value):

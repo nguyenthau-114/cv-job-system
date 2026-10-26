@@ -7,7 +7,7 @@ from types import ModuleType
 import unittest
 from unittest.mock import patch
 
-from flask import flash, render_template
+from flask import render_template
 from jinja2 import ChoiceLoader, DictLoader, meta
 from sqlalchemy import MetaData, Text, event
 
@@ -340,9 +340,10 @@ class WorkspaceLayoutTests(unittest.TestCase):
         self.assertEqual(html.count("bootstrap.bundle.min.js"), 1)
 
     def test_flash_toast_and_recruiter_modal_survive(self):
-        with self.app.test_request_context("/candidate/"):
-            flash("Synthetic success", "success")
-            html = render_template("candidate/dashboard.html")
+        self.login(self.candidate)
+        with self.client.session_transaction() as current:
+            current["_flashes"] = [("success", "Synthetic success")]
+        html = self.get_html("/candidate/")
         self.assertIn("Synthetic success", html)
         self.assertIn("bootstrap.Toast", html)
         self.assertIn("bi-check-circle-fill text-success", html)

@@ -4,6 +4,43 @@
     color: var(--workspace-text);
 }
 
+/* Dashboard chỉ dùng trong khu vực Candidate, không đổi card của các trang khác. */
+.candidate-dashboard .card {
+    background: var(--workspace-surface);
+    color: inherit;
+    border-color: var(--workspace-border);
+    border-radius: 10px;
+}
+
+.candidate-dashboard .table {
+    table-layout: fixed;
+}
+
+.candidate-dashboard .table th:first-child {
+    width: 35%;
+}
+
+.candidate-dashboard .table th:nth-child(2) {
+    width: 25%;
+}
+
+.candidate-dashboard .table th:nth-child(3),
+.candidate-dashboard .table th:nth-child(4) {
+    width: 20%;
+}
+
+.candidate-dashboard .table th,
+.candidate-dashboard .table td,
+.candidate-dashboard-stats .card-body {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 359.98px) {
+    .candidate-dashboard-stats > .col-6 {
+        width: 100%;
+    }
+}
+
 .cv-page {
     --cv-primary: var(--jobfit-primary, #2563a6);
     --cv-pastel: var(--jobfit-pastel, #eef6ff);
@@ -213,6 +250,17 @@
 }
 
 /* ===== QUẢN LÝ CV ===== */
+/* Căn đều vị trí các nút ở cuối card CV */
+.cv-page .cv-item-card .cv-item-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.cv-page .cv-item-card .cv-item-divider {
+    margin-top: auto !important;
+}
+
 .cv-file-icon,
 .cv-step-icon,
 .cv-empty-icon {

@@ -46,3 +46,7 @@ app/static/uploads/
 tests/CV/
 tests/cv_test_results.csv
 tests/fuzzy_cv_results.csv
+
+/tests/
+/AGENTS.md
+/migrations/

@@ -1,3 +1,4 @@
+#Dashboard Admin, quản lý tài khoản và tin tuyển dụng. Gọi Model/Service liên quan.
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
@@ -10,7 +11,6 @@ from app.extensions import db
 
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
-
 
 @admin_bp.route("/")
 @role_required("ADMIN")
@@ -257,26 +257,12 @@ def jobs():
 @admin_bp.route("/jobs/<int:job_id>/toggle-visibility", methods=["POST"])
 @role_required("ADMIN")
 def toggle_job_visibility(job_id):
-    job = db.session.get(Job, job_id)
-
-    if job is None:
-        flash("Không tìm thấy tin tuyển dụng.", "danger")
+    from app.services.job_moderation_service import set_job_visibility
+    if request.files or set(request.form) - {"is_hidden", "csrf_token"} or any(
+        len(request.form.getlist(key)) != 1 for key in request.form
+    ) or request.form.get("is_hidden") not in {"0", "1"}:
+        flash("Yêu cầu không hợp lệ. Vui lòng tải lại trang.", "danger")
         return redirect(url_for("admin.jobs"))
-
-    # Admin chỉ điều chỉnh hiển thị, không thay đổi job_status
-    was_hidden = bool(job.is_hidden)
-    job.is_hidden = not was_hidden
-
-    try:
-        db.session.commit()
-        if was_hidden:
-            flash("Đã bỏ ẩn tin tuyển dụng.", "success")
-        else:
-            flash("Đã ẩn tin tuyển dụng.", "success")
-    except Exception:
-        db.session.rollback()
-        flash("Không thể cập nhật trạng thái hiển thị.", "danger")
-
+    success, message = set_job_visibility(session["user_id"], job_id, request.form["is_hidden"] == "1")
+    flash(message, "success" if success else "danger")
     return redirect(url_for("admin.jobs"))
-
-

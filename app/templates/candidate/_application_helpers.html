@@ -1,0 +1,16 @@
+{% set status_labels = {
+    'SUBMITTED': ('Đã nộp', 'text-bg-primary'),
+    'VIEWED': ('Đã xem hồ sơ', 'application-status-viewed'),
+    'CONSIDERING': ('Đang cân nhắc', 'text-bg-warning'),
+    'INTERVIEW': ('Đang phỏng vấn', 'text-bg-primary'),
+    'REJECTED': ('Đã từ chối', 'text-bg-danger'),
+    'WITHDRAWN': ('Đã rút đơn', 'text-bg-secondary')
+} %}
+{% macro status_badge(status) -%}
+{% set label, badge = status_labels.get(status, ('Chưa xác định', 'text-bg-secondary')) %}
+<span class="{{ badge if status == 'VIEWED' else 'badge text-wrap ' ~ badge }}" data-application-status>{{ label }}</span>
+{%- endmacro %}
+{% macro job_notice(status) -%}
+{% if status == 'CLOSED' %}<p class="text-danger small mb-0">Nhà tuyển dụng đã đóng tin này.</p>
+{% elif status == 'EXPIRED' %}<p class="text-danger small mb-0">Tin tuyển dụng đã hết hạn ứng tuyển.</p>{% endif %}
+{%- endmacro %}

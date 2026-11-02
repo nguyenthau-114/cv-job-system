@@ -1,0 +1,87 @@
+<div id="jobUI" data-role="{{ header_user.role if header_user else '' }}" data-login-url="{{ url_for('auth.login') }}"
+    data-saved-page="{{ '1' if request.endpoint == 'candidate.saved_jobs' else '0' }}">
+    <div id="jobActionMessage" class="visually-hidden" role="status" aria-live="polite"></div>
+    <div class="modal fade jobs-modal" id="jobQuickModal" tabindex="-1" aria-labelledby="jobQuickTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="jobQuickTitle">Xem nhanh công việc</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="jobQuickMessage" role="status"></p>
+                    <div id="jobQuickContent" hidden>
+                        <p id="jobQuickCompany" class="fw-semibold"></p>
+                        <dl class="jobs-quick-facts">
+                            <div><dt>Mức lương</dt><dd id="jobQuickSalary"></dd></div>
+                            <div><dt>Địa điểm</dt><dd id="jobQuickLocation"></dd></div>
+                            <div><dt>Kinh nghiệm</dt><dd id="jobQuickExperience"></dd></div>
+                            <div><dt>Hạn ứng tuyển</dt><dd id="jobQuickDeadline"></dd></div>
+                        </dl>
+                        <section id="jobQuickDescriptionSection"><h3 class="h6 jobs-modal-heading">Mô tả công việc</h3><div id="jobQuickDescription" class="jobs-modal-description"></div></section>
+                        <section id="jobQuickRequirementSection" class="mt-3"><h3 class="h6 jobs-modal-heading">Yêu cầu ứng viên</h3><div id="jobQuickRequirement" class="jobs-modal-description"></div></section>
+                        <section id="jobQuickRequiredSection" class="mt-3"><h3 class="h6 jobs-modal-heading">Kỹ năng bắt buộc</h3><div id="jobQuickRequired" class="jobs-detail-skills"></div></section>
+                        <section id="jobQuickPreferredSection" class="mt-3"><h3 class="h6 jobs-modal-heading">Kỹ năng ưu tiên</h3><div id="jobQuickPreferred" class="jobs-detail-skills"></div></section>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a id="jobQuickDetail" class="btn jobs-action-button jobs-quick-button" hidden>Xem chi tiết</a>
+                    <button id="jobQuickApply" class="btn jobs-action-button jobs-apply-button" type="button" data-job-action="apply" hidden>Ứng tuyển ngay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade jobs-modal" id="jobApplyModal" tabindex="-1" aria-labelledby="jobApplyTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="jobApplyTitle" class="modal-title h5">Ứng tuyển công việc</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="jobApplyMessage" role="status"></p>
+                    <a id="jobApplyLogin" class="btn btn-primary" hidden>Đăng nhập để tiếp tục</a>
+                    <form id="jobApplyForm" method="POST" hidden>
+                        <input type="hidden" id="jobCsrfToken" name="csrf_token" value="{{ csrf_token() }}">
+                        <p id="jobApplyJobName" class="fw-semibold mb-1"></p>
+                        <p id="jobApplyCompany" class="mb-3"></p>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" for="jobContactName">Họ và tên</label>
+                                <input class="form-control" id="jobContactName" name="contact_name" maxlength="100" autocomplete="name" required>
+                                <div class="invalid-feedback" data-field-error="contact_name"></div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" for="jobContactEmail">Email</label>
+                                <input class="form-control" id="jobContactEmail" name="contact_email" type="email" maxlength="255" autocomplete="email" required>
+                                <div class="invalid-feedback" data-field-error="contact_email"></div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" for="jobContactPhone">Số điện thoại</label>
+                                <input class="form-control" id="jobContactPhone" name="contact_phone" type="tel" maxlength="20" autocomplete="tel" required>
+                                <div class="invalid-feedback" data-field-error="contact_phone"></div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="jobApplicationCV">CV ứng tuyển</label>
+                                <select class="form-select" id="jobApplicationCV" name="cv_id" required></select>
+                                <div class="invalid-feedback" data-field-error="cv_id"></div>
+                                <p id="jobApplyCVGuide" class="small mt-2" hidden>Chưa có CV đang hiển thị để ứng tuyển.
+                                    <a href="{{ url_for('candidate.my_cvs') }}">Đến trang Quản lý CV</a>.</p>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="jobCoverLetter">Thư giới thiệu <span class="small">(không bắt buộc)</span></label>
+                                <textarea class="form-control" id="jobCoverLetter" name="cover_letter" rows="4" maxlength="5000"></textarea>
+                                <div class="invalid-feedback" data-field-error="cover_letter"></div>
+                                <p class="small mt-1 mb-0">Tối đa 5.000 ký tự. Thông tin liên hệ chỉ áp dụng cho đơn ứng tuyển này.</p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button id="jobApplyConfirm" type="submit" form="jobApplyForm" class="btn jobs-action-button jobs-apply-button" hidden disabled>Xác nhận ứng tuyển</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

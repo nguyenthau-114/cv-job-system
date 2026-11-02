@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-<section class="jobs-page jobs-detail-page py-4 py-lg-5">
+<section class="jobs-page jobs-detail-page py-4">
     <div class="container">
 
         <!-- Breadcrumb -->
@@ -25,128 +25,171 @@
             </ol>
         </nav>
 
-        <!-- Thông tin nổi bật -->
-        <header class="jobs-detail-header jobs-detail-hero mb-4">
-            <div class="jobs-detail-hero-main">
-                <div class="jobs-company-logo jobs-company-logo-lg flex-shrink-0">
-                    <i class="bi bi-buildings"></i>
-                </div>
-
-                <div class="jobs-detail-hero-content">
-                    <span class="jobs-open-badge mb-2">
-                        <span></span>Đang tuyển
-                    </span>
-
-                    <h1 class="jobs-detail-title">{{ job.job_title }}</h1>
-
-                    <p class="jobs-detail-company">
-                        {{ company.company_name if company else 'Công ty chưa cập nhật' }}
-                    </p>
-
-                    <div class="jobs-detail-meta">
-                        <span class="jobs-detail-meta-item">
-                            <i class="bi bi-geo-alt"></i>
-                            {{ job.location }}
-                        </span>
-                        <span class="jobs-detail-meta-item">
-                            <i class="bi bi-laptop"></i>
-                            {{ work_modes.get(job.work_mode, job.work_mode) }}
-                        </span>
-                        <span class="jobs-detail-meta-item">
-                            <i class="bi bi-briefcase"></i>
-                            {{ job_types.get(job.job_type, job.job_type) }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="jobs-detail-hero-bottom">
-                <div>
-                    <span class="jobs-detail-salary-label">Mức lương</span>
-                    <div class="jobs-detail-salary">{{ salary_text(job) }}</div>
-                </div>
-
-                <div class="jobs-detail-deadline">
-                    <i class="bi bi-calendar3"></i>
-                    Hạn ứng tuyển:
-                    <strong>{{ job.application_deadline.strftime('%d/%m/%Y') }}</strong>
-                </div>
-            </div>
-        </header>
-
         <div class="row g-4">
-
-            <!-- Nội dung chính -->
             <div class="col-lg-8">
+                <!-- Thông tin nổi bật -->
+                <header class="jobs-detail-header jobs-detail-hero mb-4">
+                    <div class="jobs-detail-hero-main">
+                        <div class="jobs-company-logo jobs-company-logo-lg flex-shrink-0">
+                            {% if company %}<a class="jobs-company-logo-link" href="{{ url_for('public_companies.show', company_id=company.company_id) }}" aria-label="Hồ sơ {{ company.company_name }}">{% endif %}
+                            {% if company and company.logo %}
+                            <img src="{{ url_for('static', filename=company.logo) }}" alt="Logo {{ company.company_name }}"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <i class="bi bi-buildings" style="display:none;"></i>
+                            {% else %}<i class="bi bi-buildings"></i>{% endif %}
+                            {% if company %}</a>{% endif %}
+                        </div>
+
+                        <div class="jobs-detail-hero-content">
+                            <h1 class="jobs-detail-title">{{ job.job_title }}</h1>
+
+                            <p class="jobs-detail-company">
+                                {% if company %}<a class="jobs-company-link" href="{{ url_for('public_companies.show', company_id=company.company_id) }}">{{ company.company_name }}</a>
+                                {% else %}Công ty chưa cập nhật{% endif %}
+                                <span class="jobs-open-badge"><span></span>Đang tuyển</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="jobs-detail-meta">
+                        <span class="jobs-detail-meta-item"><i class="bi bi-geo-alt"></i>{{ job.location }}</span>
+                        <span class="jobs-detail-meta-item"><i class="bi bi-briefcase"></i>Kinh nghiệm: {{ job.experience|default('', true)|trim or 'Chưa cập nhật' }}</span>
+                        <span class="jobs-detail-meta-item"><i class="bi bi-calendar3"></i>Hạn ứng tuyển: <strong>{{ job.application_deadline.strftime('%d/%m/%Y') }}</strong></span>
+                    </div>
+                    <div class="jobs-detail-hero-bottom">
+                        <div>
+                            <span class="jobs-detail-salary-label">Mức lương</span>
+                            <div class="jobs-detail-salary">{{ salary_text(job) }}</div>
+                        </div>
+
+                        <div class="jobs-detail-actions">
+                            {% if card.application_status %}
+                            <span class="jobs-applied-state">{{ 'Đã ứng tuyển (đã rút)' if card.application_status == 'WITHDRAWN' else 'Đã ứng tuyển' }}</span>
+                            {% else %}
+                            <button class="btn jobs-action-button jobs-apply-button" type="button" data-job-action="apply"
+                                data-job-id="{{ job.job_id }}" data-options-url="{{ url_for('candidate.application_options', job_id=job.job_id) }}"
+                                data-detail-url="{{ url_for('public_jobs.show', job_id=job.job_id) }}"
+                                {% if header_user and header_user.role != 'CANDIDATE' %}disabled title="Chỉ dành cho ứng viên"{% endif %}>Ứng tuyển ngay</button>
+                            {% endif %}
+                            <button type="button" class="jobs-save-btn {{ 'is-saved' if card.is_saved else '' }}" data-job-action="save"
+                                data-job-id="{{ job.job_id }}" data-is-saved="{{ '1' if card.is_saved else '0' }}"
+                                data-save-url="{{ url_for('candidate.save_job', job_id=job.job_id) }}"
+                                data-detail-url="{{ url_for('public_jobs.show', job_id=job.job_id) }}"
+                                aria-pressed="{{ 'true' if card.is_saved else 'false' }}"
+                                aria-label="{{ 'Bỏ lưu tin tuyển dụng' if card.is_saved else 'Lưu tin tuyển dụng' }}"
+                                title="{{ 'Bỏ lưu tin tuyển dụng' if card.is_saved else 'Lưu tin tuyển dụng' }}"
+                                {% if header_user and header_user.role != 'CANDIDATE' %}disabled{% endif %}>
+                                <i class="bi {{ 'bi-heart-fill' if card.is_saved else 'bi-heart' }}" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Nội dung chính -->
                 <article class="jobs-detail-panel jobs-detail-content">
-
+                    {% if (category and category.category_name|trim) or job.location|default('', true)|trim or job.working_time|default('', true)|trim %}
                     <section class="jobs-detail-section">
-                        <h2 class="jobs-detail-heading">Mô tả công việc</h2>
-                        <div class="jobs-description">
-                            {{ job.job_description }}
-                        </div>
-                    </section>
-
-                    <section class="jobs-detail-section">
-                        <h2 class="jobs-detail-heading">Yêu cầu ứng viên</h2>
-                        <div class="jobs-description">
-                            {{ job.job_requirement }}
-                        </div>
-                    </section>
-
-                    {% if job.benefit %}
-                    <section class="jobs-detail-section">
-                        <h2 class="jobs-detail-heading">Quyền lợi</h2>
-                        <div class="jobs-description">
-                            {{ job.benefit }}
-                        </div>
+                        <h2 class="jobs-detail-heading">Tổng quan công việc</h2>
+                        <dl class="jobs-overview mb-0">
+                            {% if category and category.category_name|trim %}<div><dt>Danh mục</dt><dd>{{ category.category_name }}</dd></div>{% endif %}
+                            {% if job.location|default('', true)|trim %}<div><dt>Địa điểm làm việc</dt><dd>{{ job.location }}</dd></div>{% endif %}
+                            {% if job.working_time|default('', true)|trim %}<div><dt>Thời gian làm việc</dt><dd>{{ job.working_time }}</dd></div>{% endif %}
+                        </dl>
                     </section>
                     {% endif %}
-
+                    {% if job.job_description|default('', true)|trim %}
+                    <section class="jobs-detail-section">
+                        <h2 class="jobs-detail-heading">Mô tả công việc</h2>
+                        <div class="jobs-description">{{ job.job_description }}</div>
+                    </section>
+                    {% endif %}
+                    {% if job.job_requirement|default('', true)|trim %}
+                    <section class="jobs-detail-section">
+                        <h2 class="jobs-detail-heading">Yêu cầu ứng viên</h2>
+                        <div class="jobs-description">{{ job.job_requirement }}</div>
+                    </section>
+                    {% endif %}
+                    {% if job.benefit|default('', true)|trim %}
+                    <section class="jobs-detail-section">
+                        <h2 class="jobs-detail-heading">Quyền lợi</h2>
+                        <div class="jobs-description">{{ job.benefit }}</div>
+                    </section>
+                    {% endif %}
+                    {% set visible_skills = namespace(values=[]) %}
+                    {% for skill in job_skills if skill.name|default('', true)|trim %}
+                    {% set _ = visible_skills.values.append(skill) %}
+                    {% endfor %}
+                    {% set required_skills = visible_skills.values|selectattr('type', 'equalto', 'REQUIRED')|list %}
+                    {% set preferred_skills = visible_skills.values|selectattr('type', 'equalto', 'PREFERRED')|list %}
+                    {% if required_skills %}
                     <section class="jobs-detail-section">
                         <h2 class="jobs-detail-heading">Kỹ năng bắt buộc</h2>
                         <div class="jobs-detail-skills">
-                            {% for skill in job_skills if skill.type == 'REQUIRED' %}
+                            {% for skill in required_skills %}
                             <span class="jobs-skill-tag jobs-required-tag">
                                 {{ skill.name }}
                             </span>
-                            {% else %}
-                            <p class="small text-secondary mb-0">
-                                Chưa cập nhật kỹ năng bắt buộc.
-                            </p>
                             {% endfor %}
                         </div>
                     </section>
-
+                    {% endif %}
+                    {% if preferred_skills %}
                     <section class="jobs-detail-section">
                         <h2 class="jobs-detail-heading">Kỹ năng ưu tiên</h2>
                         <div class="jobs-detail-skills">
-                            {% for skill in job_skills if skill.type == 'PREFERRED' %}
+                            {% for skill in preferred_skills %}
                             <span class="jobs-skill-tag">
                                 {{ skill.name }}
                             </span>
-                            {% else %}
-                            <p class="small text-secondary mb-0">
-                                Chưa cập nhật kỹ năng ưu tiên.
-                            </p>
                             {% endfor %}
                         </div>
                     </section>
-
+                    {% endif %}
                 </article>
             </div>
 
             <!-- Sidebar -->
             <div class="col-lg-4">
-                <aside class="jobs-detail-panel jobs-detail-sidebar mb-3">
-                    <h2 class="jobs-detail-heading">Thông tin tuyển dụng</h2>
+                <aside class="jobs-detail-panel jobs-detail-sidebar jobs-company-panel mb-3">
+                    <h2 class="jobs-detail-heading">Thông tin công ty</h2>
+
+                    <div class="jobs-company-logo mb-3">
+                        {% if company %}<a class="jobs-company-logo-link" href="{{ url_for('public_companies.show', company_id=company.company_id) }}" aria-label="Hồ sơ {{ company.company_name }}">{% endif %}
+                        {% if company and company.logo %}
+                        <img src="{{ url_for('static', filename=company.logo) }}" alt="Logo {{ company.company_name }}"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <i class="bi bi-buildings" style="display:none;"></i>
+                        {% else %}<i class="bi bi-buildings"></i>{% endif %}
+                        {% if company %}</a>{% endif %}
+                    </div>
+                    <h3 class="jobs-company-name">
+                        {% if company %}<a class="jobs-company-link" href="{{ url_for('public_companies.show', company_id=company.company_id) }}">{{ company.company_name }}</a>
+                        {% else %}Chưa cập nhật{% endif %}
+                    </h3>
+
+                    {% if company %}
+                    {% if company.address|default('', true)|trim %}
+                    <p class="jobs-company-address">
+                        <i class="bi bi-geo-alt"></i>
+                        {{ company.address }}
+                    </p>
+                    {% endif %}
+
+                    {% if company.company_description|default('', true)|trim %}
+                    <div class="jobs-description jobs-company-description">{{ company.company_description }}</div>
+                    {% endif %}
+
+                    <a href="{{ url_for('public_companies.show', company_id=company.company_id) }}"
+                        class="jobs-company-website">
+                        Xem công ty
+                        <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                    {% endif %}
+                </aside>
+
+                <aside class="jobs-detail-panel jobs-detail-sidebar">
+                    <h2 class="jobs-detail-heading">Thông tin chung</h2>
 
                     <dl class="jobs-info-list mb-0">
-                        <div class="jobs-info-item">
-                            <dt>Mức lương</dt>
-                            <dd class="jobs-info-salary">{{ salary_text(job) }}</dd>
-                        </div>
-
                         <div class="jobs-info-item">
                             <dt>Cấp bậc</dt>
                             <dd>{{ job.level }}</dd>
@@ -154,7 +197,7 @@
 
                         <div class="jobs-info-item">
                             <dt>Kinh nghiệm</dt>
-                            <dd>{{ job.experience }}</dd>
+                            <dd>{{ job.experience|default('', true)|trim or 'Chưa cập nhật' }}</dd>
                         </div>
 
                         <div class="jobs-info-item">
@@ -183,40 +226,14 @@
                         </div>
                     </dl>
                 </aside>
-
-                <aside class="jobs-detail-panel jobs-detail-sidebar jobs-company-panel">
-                    <h2 class="jobs-detail-heading">Thông tin công ty</h2>
-
-                    <h3 class="jobs-company-name">
-                        {{ company.company_name if company else 'Chưa cập nhật' }}
-                    </h3>
-
-                    {% if company %}
-                    {% if company.address %}
-                    <p class="jobs-company-address">
-                        <i class="bi bi-geo-alt"></i>
-                        {{ company.address }}
-                    </p>
-                    {% endif %}
-
-                    {% if company.company_description %}
-                    <div class="jobs-description jobs-company-description">
-                        {{ company.company_description }}
-                    </div>
-                    {% endif %}
-
-                    {% if company.website and company.website.startswith(('https://', 'http://')) %}
-                    <a href="{{ company.website }}" target="_blank" rel="noopener noreferrer"
-                        class="jobs-company-website">
-                        Website công ty
-                        <i class="bi bi-box-arrow-up-right ms-1"></i>
-                    </a>
-                    {% endif %}
-                    {% endif %}
-                </aside>
             </div>
 
         </div>
     </div>
 </section>
+{% include "jobs/_modals.html" %}
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/jobs.js') }}" defer></script>
 {% endblock %}

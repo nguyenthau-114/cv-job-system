@@ -1,10 +1,8 @@
 
-from datetime import date
 from decimal import Decimal, InvalidOperation
 
-from flask import Blueprint, abort, render_template, request
+from flask import Blueprint, abort, jsonify, render_template, request, session, url_for
 from sqlalchemy import and_, or_
-from sqlalchemy.orm import selectinload
 
 from app.extensions import db
 from app.models.company import Company
@@ -12,8 +10,24 @@ from app.models.job import Job
 from app.models.job_category import JobCategory
 from app.models.job_skill import JobSkill
 from app.models.skill import Skill
+from app.models.user import User
+from app.services.job_service import company_website_url, visible_jobs, load_job_data, salary_text
+from app.services.application_service import get_application_statuses
+from app.services.saved_job_service import get_saved_job_ids
+from app.services.public_job_service import cards_for_viewer as build_public_cards
 
 public_jobs_bp = Blueprint("public_jobs", __name__)
+
+
+@public_jobs_bp.after_request
+def private_job_response(response):
+    # Trạng thái lưu/ứng tuyển và CSRF phụ thuộc phiên đăng nhập.
+    response.headers["Cache-Control"] = "private, no-store"
+    return response
+
+
+def cards_for_viewer(jobs, companies, skills):
+    return build_public_cards(jobs, companies, skills, session.get("user_id"))
 
 WORK_MODES = {
     "ONSITE": "Tại văn phòng",
@@ -40,13 +54,6 @@ SORT_OPTIONS = {
 }
 
 
-def visible_jobs():
-    # Chỉ công khai tin đang tuyển, chưa bị ẩn và còn hạn.
-    return Job.query.filter(
-        Job.job_status == "OPEN",
-        Job.is_hidden.is_(False),
-        Job.application_deadline >= date.today()
-    )
 
 
 def salary_value(name):
@@ -63,57 +70,8 @@ def salary_value(name):
         return None
 
 
-def load_job_data(jobs):
-    """Lấy thông tin công ty và kỹ năng cho cả trang."""
-    job_ids = [job.job_id for job in jobs]
-    company_ids = {job.company_id for job in jobs}
-    companies = {}
-    skills_by_job = {job_id: [] for job_id in job_ids}
-
-    if company_ids:
-        companies = {
-            company.company_id: company
-            for company in Company.query.filter(
-                Company.company_id.in_(company_ids)
-            ).all()
-        }
-
-    if job_ids:
-        rows = (
-            db.session.query(
-                JobSkill.job_id,
-                JobSkill.requirement_type,
-                Skill.skill_name
-            )
-            .join(Skill, Skill.skill_id == JobSkill.skill_id)
-            .filter(JobSkill.job_id.in_(job_ids))
-            .order_by(Skill.skill_name.asc())
-            .all()
-        )
-        for job_id, requirement_type, skill_name in rows:
-            skills_by_job[job_id].append({
-                "name": skill_name,
-                "type": requirement_type
-            })
-
-    return companies, skills_by_job
 
 
-def salary_text(job):
-    """Hiển thị lương theo triệu VND."""
-    minimum = job.min_salary
-    maximum = job.max_salary
-
-    def fmt(value):
-        return f"{value / Decimal('1000000'):g}"
-
-    if minimum is not None and maximum is not None:
-        return f"{fmt(minimum)} - {fmt(maximum)} triệu"
-    if minimum is not None:
-        return f"Từ {fmt(minimum)} triệu"
-    if maximum is not None:
-        return f"Đến {fmt(maximum)} triệu"
-    return "Thỏa thuận"
 
 
 @public_jobs_bp.route("/jobs")
@@ -252,6 +210,7 @@ def index():
     return render_template(
         "jobs/index.html",
         jobs=jobs,
+        job_cards=cards_for_viewer(jobs, companies, skills_by_job),
         pagination=pagination,
         categories=categories,
         skills=skills,
@@ -280,10 +239,42 @@ def show(job_id):
     return render_template(
         "jobs/show.html",
         job=job,
+        card=cards_for_viewer([job], companies, skills_by_job)[0],
         company=companies.get(job.company_id),
+        company_website=company_website_url(companies.get(job.company_id)),
         category=category,
         job_skills=skills_by_job.get(job.job_id, []),
         work_modes=WORK_MODES,
         job_types=JOB_TYPES,
         salary_text=salary_text
     )
+
+
+@public_jobs_bp.route("/jobs/<int:job_id>/quick-view")
+def quick_view(job_id):
+    job = visible_jobs().filter(Job.job_id == job_id).first_or_404()
+    companies, skills = load_job_data([job])
+    company = companies.get(job.company_id)
+    user = db.session.get(User, session["user_id"]) if session.get("user_id") else None
+    candidate = user if user and user.role == "CANDIDATE" and user.user_status == "ACTIVE" else None
+    states = get_application_statuses(candidate.user_id, [job_id]) if candidate else {}
+
+    def preview(value):
+        text = (value or "").strip()
+        return text[:600].rstrip() + "…" if len(text) > 600 else text
+
+    response = jsonify(success=True, job={
+        "id": job.job_id, "title": job.job_title,
+        "company": company.company_name if company else "Chưa cập nhật công ty",
+        "salary": salary_text(job), "location": job.location, "experience": job.experience,
+        "deadline": job.application_deadline.strftime("%d/%m/%Y"),
+        "description": preview(job.job_description), "requirement": preview(job.job_requirement),
+        "skills": skills.get(job_id, []), "application_status": states.get(job_id),
+        "detail_url": url_for("public_jobs.show", job_id=job_id),
+        "options_url": url_for("candidate.application_options", job_id=job_id),
+        "quick_url": url_for("public_jobs.quick_view", job_id=job_id),
+        "save_url": url_for("candidate.save_job", job_id=job_id),
+        "is_saved": job_id in get_saved_job_ids(candidate.user_id, [job_id]) if candidate else False,
+    })
+    response.headers["Cache-Control"] = "private, no-store"
+    return response

@@ -1,0 +1,73 @@
+{% extends "candidate/candidate_base.html" %}
+{% from "candidate/_application_helpers.html" import status_badge, job_notice %}
+{% block title %}Chi tiết đơn ứng tuyển - JobFit{% endblock %}
+{% block candidate_content %}
+<section class="candidate-application-detail" data-application-id="{{ application.application_id }}" aria-labelledby="applicationDetailTitle">
+    <a class="small d-inline-block mb-3" href="{{ url_for('candidate.applications') }}">← Đơn ứng tuyển</a>
+    <h1 class="h4 fw-bold mb-3" id="applicationDetailTitle">Chi tiết đơn ứng tuyển</h1>
+    <div class="card candidate-application-hero mb-3"><div class="card-body">
+        <div class="candidate-application-heading">
+            <h2 class="h5 fw-bold mb-0" data-application-job>{{ application.job_title }}</h2>
+            {{ status_badge(application.application_status) }}
+        </div>
+        <p class="candidate-application-company" data-application-company>{{ application.company_name }}</p>
+        {{ job_notice(application.job_status) }}
+        <p class="candidate-application-date">Ngày nộp: {{ application.applied_at.strftime('%d/%m/%Y %H:%M') }}</p>
+        {% if application.withdrawn_at %}<p class="candidate-application-date">Ngày rút đơn: {{ application.withdrawn_at.strftime('%d/%m/%Y %H:%M') }}</p>{% endif %}
+        {% if application.job_status == 'OPEN' %}<a data-application-public-job href="{{ url_for('public_jobs.show', job_id=application.job_id) }}">Xem tin tuyển dụng</a>{% endif %}
+    </div></div>
+    <div class="candidate-application-grid">
+        <div class="candidate-application-main">
+            <div class="card"><div class="card-body">
+                <h2 class="candidate-panel-title">Thông tin liên hệ đã nộp</h2>
+                <dl class="candidate-contact-list">
+                    <div><dt>Họ tên</dt><dd>{{ application.contact_name }}</dd></div>
+                    <div><dt>Email</dt><dd>{{ application.contact_email }}</dd></div>
+                    <div><dt>Số điện thoại</dt><dd>{{ application.contact_phone }}</dd></div>
+                </dl>
+            </div></div>
+            <div class="card"><div class="card-body">
+                <h2 class="candidate-panel-title">Thư giới thiệu</h2>
+                <p class="candidate-cover-letter mb-0">{{ application.cover_letter or 'Bạn không gửi thư giới thiệu.' }}</p>
+            </div></div>
+        </div>
+        <aside class="candidate-application-side" aria-label="CV và thao tác đơn ứng tuyển">
+            <div class="card"><div class="card-body">
+                <h2 class="candidate-panel-title">CV trong đơn ứng tuyển</h2>
+                {% if application.cv %}
+                <a class="candidate-cv-link" href="{{ url_for('candidate.view_cv', cv_id=application.cv.id) }}" target="_blank" rel="noopener">{{ application.cv.name }}</a>
+                {% else %}<p class="text-danger mb-0">Không tìm thấy CV thuộc hồ sơ của bạn.</p>{% endif %}
+                {% if application.can_replace %}
+                <form class="candidate-action-form mt-3" action="{{ url_for('candidate.change_application_cv', application_id=application.application_id) }}" method="POST" data-candidate-action="replace">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label for="replacementCV" class="form-label">Thay CV đã ứng tuyển</label>
+                    {% if application.selectable_cvs %}
+                    <select class="form-select mb-2" id="replacementCV" name="cv_id" required>
+                        {% for cv in application.selectable_cvs %}<option value="{{ cv.cv_id }}" {% if application.cv and cv.cv_id == application.cv.id %}selected{% endif %}>{{ cv.file_name }}</option>{% endfor %}
+                    </select>
+                    <button class="btn btn-primary" type="submit">Lưu CV thay thế</button>
+                    {% else %}<p class="mb-2">Chưa có CV đang hiển thị để lựa chọn. <a href="{{ url_for('candidate.my_cvs') }}">Quản lý CV</a></p>{% endif %}
+                    <p class="candidate-action-explanation mt-2 mb-0">Chỉ được thay khi Recruiter chưa xem hồ sơ. Thông tin liên hệ và ngày nộp được giữ nguyên.</p>
+                    <p class="candidate-action-message mb-0" role="status" aria-live="polite"></p>
+                </form>
+                {% else %}<p class="candidate-action-explanation mt-2 mb-0">Không thể thay CV ở trạng thái hiện tại.</p>{% endif %}
+            </div></div>
+            {% if application.can_withdraw %}
+            <div class="card candidate-withdraw-panel"><div class="card-body">
+                <h2 class="candidate-panel-title">Rút đơn ứng tuyển</h2>
+                <p class="text-danger small">Sau khi rút đơn, bạn không thể ứng tuyển lại công việc này.</p>
+                <form class="candidate-action-form" action="{{ url_for('candidate.withdraw_application', application_id=application.application_id) }}" method="POST" data-candidate-action="withdraw" data-confirm="Bạn muốn rút đơn? Bạn sẽ không thể ứng tuyển lại công việc này.">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-outline-danger" type="submit">Rút đơn ứng tuyển</button>
+                    <p class="candidate-action-message mb-0" role="status" aria-live="polite"></p>
+                </form>
+            </div></div>
+            {% endif %}
+        </aside>
+    </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/candidate.js') }}" defer></script>
+{% endblock %}

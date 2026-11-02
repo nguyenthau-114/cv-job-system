@@ -20,12 +20,63 @@ from io import BytesIO
 from PIL import Image, UnidentifiedImageError
 from app.models.user import User
 from app.services.auth_service import validate_password
-from app.services.application_service import open_recruiter_application
+from app.services.application_service import (
+    open_recruiter_application, get_recruiter_applications, get_recruiter_application_detail,
+    transition_recruiter_application_status,
+)
 from urllib.parse import urlsplit
 from werkzeug.exceptions import HTTPException
 
 recruiter_bp = Blueprint("recruiter", __name__, url_prefix="/recruiter")
 PENDING_JOB_TTL = 1800
+
+
+@recruiter_bp.after_request
+def private_application_response(response):
+    if request.endpoint and request.endpoint in {
+        "recruiter.applications", "recruiter.application_detail", "recruiter.open_application",
+        "recruiter.open_application_cv", "recruiter.update_application_status"
+    }:
+        response.headers["Cache-Control"] = "private, no-store"
+    return response
+
+
+@recruiter_bp.route("/applications")
+@role_required("RECRUITER")
+def applications():
+    data = get_recruiter_applications(
+        session["user_id"], request.args.get("page", 1, type=int), request.args.get("job_id", ""),
+        request.args.get("status", ""), request.args.get("q", ""),
+    )
+    if data is None:
+        abort(404)
+    return render_template("recruiter/applications.html", **data)
+
+
+@recruiter_bp.route("/applications/<int:application_id>")
+@role_required("RECRUITER")
+def application_detail(application_id):
+    application = get_recruiter_application_detail(session["user_id"], application_id)
+    if application is None:
+        abort(404)
+    return render_template("recruiter/application_detail.html", application=application)
+
+
+@recruiter_bp.route("/applications/<int:application_id>/status", methods=["POST"])
+@role_required("RECRUITER")
+def update_application_status(application_id):
+    if request.files or set(request.form) - {"status", "csrf_token"} or any(
+        len(request.form.getlist(key)) != 1 for key in request.form
+    ):
+        return jsonify(success=False, errors={"state": "Yêu cầu xử lý hồ sơ không hợp lệ."}), 400
+    result, errors = transition_recruiter_application_status(
+        session["user_id"], application_id, request.form.get("status")
+    )
+    if errors:
+        statuses = {"account": 403, "application": 404, "cv": 404, "job": 409,
+                    "state": 409, "concurrency": 409, "database": 503}
+        return jsonify(success=False, errors=errors), statuses.get(next(iter(errors)), 400)
+    return jsonify(success=True, **result)
 
 
 def _open_application_response(application_id, with_cv=False):
@@ -56,6 +107,9 @@ def _open_application_response(application_id, with_cv=False):
         response.call_on_close(cv_file.close)
         response.headers["X-Content-Type-Options"] = "nosniff"
     else:
+        # Form HTML dùng PRG, API hiện có vẫn nhận JSON nếu không yêu cầu HTML.
+        if request.accept_mimetypes["text/html"] > request.accept_mimetypes["application/json"]:
+            return redirect(url_for("recruiter.application_detail", application_id=application_id), code=303)
         response = jsonify(success=True, application=result)
     response.headers["Cache-Control"] = "private, no-store"
     return response

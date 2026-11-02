@@ -1,3 +1,4 @@
+#Quản lý CV, đọc/trích xuất thông tin CV.
 import os
 import uuid
 import zipfile
@@ -95,6 +96,13 @@ def get_user_cvs(user_id):
         .order_by(CV.uploaded_at.desc())
         .all()
     )
+
+
+def get_selectable_user_cvs(user_id):
+    """CV được phép chọn cho đơn mới, không phụ thuộc trạng thái phân tích."""
+    return db.session.query(CV.cv_id, CV.file_name).filter(
+        CV.user_id == user_id, CV.is_hidden.is_(False)
+    ).order_by(CV.uploaded_at.desc(), CV.cv_id.desc()).all()
 
 
 def set_cv_visibility(user_id, cv_id, is_hidden):

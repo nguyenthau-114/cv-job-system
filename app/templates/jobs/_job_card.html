@@ -1,0 +1,75 @@
+<article class="jobs-result-card" data-job-card="{{ card.id }}">
+    {% if card.status == 'UNAVAILABLE' %}
+    <p class="mb-3">Tin tuyển dụng hiện không còn khả dụng.</p>
+    {% else %}
+    <div class="jobs-card-top">
+        <div class="jobs-company-logo">
+            {% if card.logo %}
+            <img src="{{ url_for('static', filename=card.logo) }}" alt="Logo {{ card.company }}" loading="lazy"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <i class="bi bi-buildings jobs-logo-fallback" style="display:none;"></i>
+            {% else %}<i class="bi bi-buildings"></i>{% endif %}
+        </div>
+        <div class="jobs-card-heading">
+            <h3>{% if card.status == 'OPEN' %}<a href="{{ url_for('public_jobs.show', job_id=card.id) }}">{{ card.title }}</a>
+                {% else %}{{ card.title }}{% endif %}</h3>
+            <div class="jobs-card-company">
+                <p>{{ card.company }}</p>
+                <span class="jobs-open-badge {{ 'jobs-inactive-badge' if card.status != 'OPEN' else '' }}">
+                    <span></span>{{ {'OPEN': 'Đang tuyển', 'CLOSED': 'Đã đóng', 'EXPIRED': 'Hết hạn'}.get(card.status) }}
+                </span>
+            </div>
+        </div>
+        <div class="jobs-card-aside">
+            <div class="jobs-card-salary">{{ card.salary }}</div>
+            {% if card.status == 'OPEN' and not saved_view|default(false) %}
+            <button class="jobs-card-quick" type="button" data-job-action="quick"
+                data-job-id="{{ card.id }}" data-quick-url="{{ url_for('public_jobs.quick_view', job_id=card.id) }}">Xem nhanh »</button>
+            {% endif %}
+        </div>
+    </div>
+    <div class="jobs-card-meta">
+        <div><i class="bi bi-geo-alt"></i><span>{{ card.location }}</span></div>
+        <div><i class="bi bi-briefcase"></i><span>Kinh nghiệm: {{ card.experience|default('', true)|trim or 'Chưa cập nhật' }}</span></div>
+        <div>{{ card.work_mode }}</div>
+        <div>{{ card.job_type }}</div>
+    </div>
+    {% if card.skills %}
+    <div class="jobs-card-tags">
+        {% for skill in card.skills[:5] %}<span class="jobs-skill-tag">{{ skill.name }}</span>{% endfor %}
+    </div>
+    {% endif %}
+    {% if card.status == 'CLOSED' %}<p class="text-danger small mt-3 mb-0">Nhà tuyển dụng đã đóng tin này.</p>
+    {% elif card.status == 'EXPIRED' %}<p class="text-danger small mt-3 mb-0">Tin tuyển dụng đã hết hạn ứng tuyển.</p>{% endif %}
+    {% endif %}
+    <div class="jobs-card-footer">
+        {% if card.status != 'UNAVAILABLE' %}
+        <div class="jobs-card-dates small">
+            {% if card.saved_at %}<span>Ngày lưu: {{ card.saved_at.strftime('%d/%m/%Y') }}</span>{% endif %}
+            {% if card.deadline %}<span>Hạn ứng tuyển: {{ card.deadline.strftime('%d/%m/%Y') }}</span>{% endif %}
+        </div>
+        {% endif %}
+        <div class="jobs-card-actions">
+            {% if card.status == 'OPEN' %}
+            <a class="btn jobs-action-button jobs-quick-button" href="{{ url_for('public_jobs.show', job_id=card.id) }}">Xem chi tiết</a>
+            {% if card.application_status %}
+            <span class="jobs-applied-state" data-applied-state="{{ card.id }}">{{ 'Đã ứng tuyển (đã rút)' if card.application_status == 'WITHDRAWN' else 'Đã ứng tuyển' }}</span>
+            {% else %}
+            <button class="btn jobs-action-button jobs-apply-button" type="button" data-job-action="apply"
+                data-job-id="{{ card.id }}" data-options-url="{{ url_for('candidate.application_options', job_id=card.id) }}"
+                data-detail-url="{{ url_for('public_jobs.show', job_id=card.id) }}"
+                {% if header_user and header_user.role != 'CANDIDATE' %}disabled title="Chỉ dành cho ứng viên"{% endif %}>Ứng tuyển</button>
+            {% endif %}
+            {% endif %}
+            <button type="button" class="jobs-save-btn {{ 'is-saved' if card.is_saved else '' }}" data-job-action="save"
+                data-job-id="{{ card.id }}" data-is-saved="{{ '1' if card.is_saved else '0' }}"
+                data-save-url="{{ url_for('candidate.save_job', job_id=card.id) }}"
+                data-detail-url="{{ url_for('public_jobs.show', job_id=card.id) }}" aria-pressed="{{ 'true' if card.is_saved else 'false' }}"
+                aria-label="{{ 'Bỏ lưu tin tuyển dụng' if card.is_saved else 'Lưu tin tuyển dụng' }}"
+                title="{{ 'Bỏ lưu tin tuyển dụng' if card.is_saved else 'Lưu tin tuyển dụng' }}"
+                {% if header_user and header_user.role != 'CANDIDATE' %}disabled{% endif %}>
+                <i class="bi {{ 'bi-heart-fill' if card.is_saved else 'bi-heart' }}" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+</article>

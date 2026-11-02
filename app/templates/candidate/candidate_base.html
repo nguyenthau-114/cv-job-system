@@ -23,6 +23,14 @@
         href="{{ url_for('candidate.my_cvs') }}" {% if request.endpoint in ['candidate.my_cvs', 'candidate.upload_cv_file', 'candidate.view_cv', 'candidate.analyze_cv', 'candidate.review_cv_skills', 'candidate.confirm_cv_skills', 'candidate.delete_cv_file'] %}aria-current="page"{% endif %}>
         <i class="bi bi-file-earmark-text"></i><span>Quản lý CV</span>
     </a>
+    <a class="workspace-nav-link {% if request.endpoint == 'candidate.saved_jobs' %}active{% endif %}"
+        href="{{ url_for('candidate.saved_jobs') }}" {% if request.endpoint == 'candidate.saved_jobs' %}aria-current="page"{% endif %}>
+        <i class="bi bi-heart"></i><span>Việc làm đã lưu</span>
+    </a>
+    <a class="workspace-nav-link {% if request.endpoint in ['candidate.applications', 'candidate.application_detail'] %}active{% endif %}"
+        href="{{ url_for('candidate.applications') }}" {% if request.endpoint in ['candidate.applications', 'candidate.application_detail'] %}aria-current="page"{% endif %}>
+        <i class="bi bi-send"></i><span>Đơn ứng tuyển</span>
+    </a>
 </nav>
 <div class="workspace-sidebar-divider"></div>
 <nav class="nav flex-column gap-1" aria-label="Điều hướng chung">

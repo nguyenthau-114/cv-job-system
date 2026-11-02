@@ -1,0 +1,43 @@
+{% extends "candidate/candidate_base.html" %}
+{% block title %}Việc làm đã lưu - JobFit{% endblock %}
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/jobs.css') }}">
+{% endblock %}
+{% block candidate_content %}
+<div class="jobs-saved-page">
+    <h1 class="h4 fw-bold mb-2">Việc làm đã lưu</h1>
+    <p class="jobs-saved-description">{{ pagination.total }} tin đã lưu. Lưu tin không đồng nghĩa với ứng tuyển.</p>
+    {% set saved_view = true %}
+    <div class="jobs-results-list">
+    {% for card in job_cards %}
+    {% include "jobs/_job_card.html" %}
+    {% else %}
+    <div class="jobs-empty-state">
+        <h2>Chưa có việc làm đã lưu</h2>
+        <p>Khám phá công việc phù hợp và nhấn trái tim để lưu lại.</p>
+        <a class="btn jobs-empty-button" href="{{ url_for('public_jobs.index') }}">Khám phá việc làm</a>
+    </div>
+    {% endfor %}
+    </div>
+    {% if pagination.pages > 1 %}
+    <nav class="mt-4" aria-label="Phân trang việc làm đã lưu">
+        <ul class="pagination justify-content-center flex-wrap gap-1">
+            {% for page in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=1) %}
+            {% if page %}
+            <li class="page-item {{ 'active' if page == pagination.page else '' }}">
+                <a class="page-link" href="{{ url_for('candidate.saved_jobs', page=page) }}"
+                    {% if page == pagination.page %}aria-current="page"{% endif %}>{{ page }}</a>
+            </li>
+            {% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% include "jobs/_modals.html" %}
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/jobs.js') }}" defer></script>
+{% endblock %}

@@ -61,6 +61,7 @@
                                 class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-eye me-1"></i>Xem chi tiết
                             </a>
+                            <a href="{{ url_for('recruiter.applications', job_id=job.job_id) }}" class="btn btn-sm btn-outline-primary">Xem hồ sơ</a>
                         </td>
                     </tr>
                     {% endfor %}

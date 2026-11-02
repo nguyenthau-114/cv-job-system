@@ -1,0 +1,48 @@
+{% macro notification_content() %}
+<section class="notifications-page" data-notifications-page aria-labelledby="notificationsTitle">
+    <div class="notification-page-header">
+        <h1 class="h4 fw-bold mb-0" id="notificationsTitle">Thông báo</h1>
+        <form method="POST" action="{{ url_for('notifications.read_all') }}" data-notification-read>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-outline-primary btn-sm" type="submit">Đánh dấu tất cả đã đọc</button>
+        </form>
+    </div>
+    <form method="GET" class="notification-filters">
+        <label for="notificationState">Hiển thị</label>
+        <select name="state" id="notificationState" class="form-select">
+            {% for value, label in [('all', 'Tất cả'), ('unread', 'Chưa đọc'), ('read', 'Đã đọc')] %}<option value="{{ value }}" {% if state == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+        <button class="btn btn-primary btn-sm" type="submit">Lọc</button>
+    </form>
+    <p class="notification-total">{{ pagination.total }} thông báo</p>
+    <div class="notification-list">
+        {% for item in notifications %}
+        <article class="notification-item {{ 'notification-unread' if not item.is_read else '' }}" data-notification-id="{{ item.id }}">
+            <span class="notification-icon" aria-hidden="true"><i class="bi bi-bell"></i></span>
+            <div class="notification-body">
+                <form method="POST" action="{{ item.open_url }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="notification-open" type="submit">{{ item.message }}</button>
+                </form>
+                <div class="notification-meta">
+                    <time datetime="{{ item.created_at }}Z" data-notification-time>{{ item.created_at[:16]|replace('T', ' ') }} UTC</time>
+                    <span data-notification-state>{{ 'Đã đọc' if item.is_read else 'Chưa đọc' }}</span>
+                </div>
+                {% if not item.is_read %}<form method="POST" action="{{ item.read_url }}" data-notification-read>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-link notification-read-one p-0" type="submit">Đánh dấu đã đọc</button>
+                </form>{% endif %}
+            </div>
+        </article>
+        {% else %}<p class="notification-empty"><i class="bi bi-bell" aria-hidden="true"></i>Không có thông báo phù hợp.</p>{% endfor %}
+    </div>
+    <nav class="mt-3" aria-label="Phân trang thông báo"><ul class="pagination justify-content-center flex-wrap">
+        {% for page in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=1) %}
+        {% if page %}<li class="page-item {{ 'active' if page == pagination.page else '' }}"><a class="page-link" href="{{ url_for('notifications.index', state=state, page=page) }}">{{ page }}</a></li>
+        {% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+        {% endfor %}
+    </ul></nav>
+    <p data-notification-page-message class="small text-danger" role="status"></p>
+</section>
+{% endmacro %}
+{{ notification_content() }}

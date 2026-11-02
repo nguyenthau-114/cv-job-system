@@ -28,6 +28,16 @@ class Notification(db.Model):
         nullable=True
     )
 
+    job_id = db.Column(db.Integer, db.ForeignKey("jobs.job_id", name="fk_notification_job_id_jobs"), nullable=True)
+    event_type = db.Column(db.String(40), nullable=False)
+    event_key = db.Column(db.String(160), nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "event_key", name="uq_notification_user_event"),
+        db.Index("ix_notification_user_latest", "user_id", "notification_id"),
+        db.Index("ix_notification_user_unread", "user_id", "is_read", "notification_id"),
+    )
+
     # Nội dung thông báo
     notification_message = db.Column(
         db.String(500),

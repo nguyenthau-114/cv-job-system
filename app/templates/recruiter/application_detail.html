@@ -1,0 +1,80 @@
+{% extends "recruiter/recruiter_base.html" %}
+{% from "candidate/_application_helpers.html" import status_badge %}
+{% block title %}Chi tiết hồ sơ ứng tuyển - JobFit{% endblock %}
+{% block recruiter_content %}
+<section class="recruiter-applications-page recruiter-application-detail" data-application-id="{{ application.application_id }}" aria-labelledby="recruiterApplicationTitle">
+    <a class="small d-inline-block mb-3" href="{{ url_for('recruiter.applications', job_id=application.job_id) }}">← Hồ sơ theo tin tuyển dụng</a>
+    <h1 class="recruiter-page-title mb-3" id="recruiterApplicationTitle">Chi tiết hồ sơ ứng tuyển</h1>
+    <div class="card recruiter-stat-card mb-3"><div class="card-body">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+            <h2 class="h5 fw-bold mb-0">{{ application.contact_name }}</h2>
+            {{ status_badge(application.application_status) }}
+        </div>
+        <p class="fw-semibold mb-2">{{ application.job_title }}</p>
+        <p class="small mb-2">Ngày ứng tuyển: {{ application.applied_at.strftime('%d/%m/%Y %H:%M') }}</p>
+        {% if application.withdrawn_at %}<p class="small mb-2">Ngày rút đơn: {{ application.withdrawn_at.strftime('%d/%m/%Y %H:%M') }}</p>{% endif %}
+        {% if application.is_hidden %}<p class="text-danger small mb-0">Tin đã bị Admin ẩn. Bạn chỉ được xem lịch sử hồ sơ.</p>{% endif %}
+    </div></div>
+    {% if application.is_submitted %}
+    <div class="card recruiter-stat-card"><div class="card-body">
+        <p>Hồ sơ chưa được mở. Chỉ thao tác mở hồ sơ hoặc CV mới ghi nhận đã xem.</p>
+        <div class="recruiter-application-actions">
+            <form method="POST" action="{{ url_for('recruiter.open_application', application_id=application.application_id) }}" data-recruiter-open="{{ url_for('recruiter.application_detail', application_id=application.application_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-primary" type="submit">Mở hồ sơ</button>
+            </form>
+            <form method="POST" action="{{ url_for('recruiter.open_application_cv', application_id=application.application_id) }}" target="_blank" rel="noopener">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-outline-primary" type="submit">Xem CV</button>
+            </form>
+            <p class="recruiter-application-message small mb-0" role="status" aria-live="polite"></p>
+        </div>
+    </div></div>
+    {% else %}
+    <div class="recruiter-application-detail-grid">
+    <div class="card recruiter-stat-card mb-3"><div class="card-body">
+        <h2 class="h6 fw-bold mb-3">Thông tin liên hệ đã nộp</h2>
+        <dl class="recruiter-application-contact">
+            <div><dt>Email</dt><dd>{{ application.contact_email }}</dd></div>
+            <div><dt>Số điện thoại</dt><dd>{{ application.contact_phone }}</dd></div>
+        </dl>
+        <h2 class="h6 fw-bold mb-2">Thư giới thiệu</h2>
+        <p class="recruiter-cover-letter mb-0">{{ application.cover_letter or 'Ứng viên không gửi thư giới thiệu.' }}</p>
+    </div></div>
+    <aside>
+    <div class="card recruiter-stat-card mb-3"><div class="card-body">
+        <h2 class="h6 fw-bold mb-2">CV hiện tại trong hồ sơ</h2>
+        {% if application.cv_name %}
+        <p>{{ application.cv_name }}</p>
+        <form method="POST" action="{{ url_for('recruiter.open_application_cv', application_id=application.application_id) }}" target="_blank" rel="noopener">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-outline-primary" type="submit">Mở CV đã nộp</button>
+        </form>
+        {% else %}<p class="text-danger mb-0">Không tìm thấy CV thuộc hồ sơ này.</p>{% endif %}
+    </div></div>
+    {% if application.can_consider or application.can_reject %}
+    <div class="card recruiter-stat-card"><div class="card-body">
+        <h2 class="h6 fw-bold mb-3">Xử lý hồ sơ</h2>
+        <div class="recruiter-application-actions">
+            {% for target, label in [('CONSIDERING', 'Đang xem xét'), ('REJECTED', 'Từ chối hồ sơ')] %}
+            {% if application.can_consider and target == 'CONSIDERING' or application.can_reject and target == 'REJECTED' %}
+            <form method="POST" action="{{ url_for('recruiter.update_application_status', application_id=application.application_id) }}" data-recruiter-status {% if target == 'REJECTED' %}data-confirm="Bạn muốn từ chối hồ sơ này? Không thể khôi phục trạng thái xét tuyển."{% endif %}>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="{{ target }}">
+                <button class="btn {{ 'btn-primary' if target == 'CONSIDERING' else 'btn-outline-danger' }}" type="submit">{{ label }}</button>
+            </form>
+            {% endif %}
+            {% endfor %}
+            <p class="recruiter-application-message small mb-0" role="status" aria-live="polite"></p>
+        </div>
+    </div></div>
+    {% elif not application.is_hidden %}<p class="text-secondary small">Hồ sơ này chỉ được xem lại, không thể tiếp tục xét tuyển.</p>{% endif %}
+    </aside>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/recruiter_applications.js') }}" defer></script>
+{% endblock %}

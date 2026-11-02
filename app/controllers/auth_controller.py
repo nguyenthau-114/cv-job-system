@@ -1,4 +1,7 @@
+#	Đăng ký, đăng nhập, OTP, quên mật khẩu, thông tin công ty khi đăng ký.
 from datetime import datetime, timedelta
+from urllib.parse import unquote, urlsplit
+from werkzeug.exceptions import HTTPException
 
 from flask import (
     Blueprint,
@@ -7,7 +10,8 @@ from flask import (
     redirect,
     url_for,
     flash,
-    session
+    session,
+    current_app
 )
 
 from app.services.auth_service import (
@@ -392,12 +396,41 @@ def recruiter_company():
     return redirect(url_for("home.home"))
 
 
+def safe_login_next(value, role=None):
+    """Chỉ nhận URL nội bộ thuộc các trang đã biết, không cho open redirect."""
+    if not isinstance(value, str) or len(value) > 2048:
+        return ""
+    decoded = unquote(value)
+    if any(ord(char) < 32 or ord(char) == 127 for char in decoded) or "\\" in decoded:
+        return ""
+    try:
+        parsed = urlsplit(value)
+        if parsed.scheme or parsed.netloc or not parsed.path.startswith("/") or parsed.path.startswith("//"):
+            return ""
+        if "%" in parsed.path:
+            return ""
+        endpoint, _ = current_app.url_map.bind_to_environ(request.environ).match(parsed.path, method="GET")
+    except (HTTPException, ValueError):
+        return ""
+    public = {"home.home", "public_jobs.index", "public_jobs.show"}
+    roles = {
+        "candidate.dashboard": "CANDIDATE", "candidate.my_cvs": "CANDIDATE",
+        "candidate.saved_jobs": "CANDIDATE", "recruiter.dashboard": "RECRUITER",
+        "admin.dashboard": "ADMIN",
+    }
+    if endpoint not in public and (endpoint not in roles or role and roles[endpoint] != role):
+        return ""
+    return value
+
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     """Hiển thị và xử lý đăng nhập."""
 
+    source = request.form if request.method == "POST" else request.args
+    next_url = safe_login_next(source.get("next", "")) if len(source.getlist("next")) <= 1 else ""
     if request.method == "GET":
-        return render_template("auth/login.html")
+        return render_template("auth/login.html", next_url=next_url)
 
     email = request.form.get("email", "")
     password = request.form.get("password", "")
@@ -409,7 +442,8 @@ def login():
 
         return render_template(
             "auth/login.html",
-            email=email
+            email=email,
+            next_url=next_url
         )
 
     # Xóa session cũ trước khi tạo phiên đăng nhập
@@ -420,7 +454,7 @@ def login():
     session["role"] = user.role
 
     flash("Đăng nhập thành công.", "success")
-    return redirect(url_for("home.home"))
+    return redirect(safe_login_next(next_url, user.role) or url_for("home.home"))
 
 # =========================
 # QUÊN MẬT KHẨU

@@ -1,0 +1,54 @@
+{% extends "candidate/candidate_base.html" %}
+{% from "candidate/_application_helpers.html" import status_labels, status_badge, job_notice %}
+{% block title %}Đơn ứng tuyển - JobFit{% endblock %}
+{% block candidate_content %}
+<section class="candidate-applications" aria-labelledby="applicationListTitle">
+    <h1 class="h4 fw-bold mb-2" id="applicationListTitle">Đơn ứng tuyển</h1>
+    <p class="text-secondary mb-3">Theo dõi hồ sơ đã nộp. Mỗi công việc chỉ được ứng tuyển một lần, kể cả sau khi rút đơn.</p>
+    <form method="GET" class="candidate-filter mb-3">
+        <label for="applicationStatus" class="form-label mb-0">Trạng thái</label>
+        <select id="applicationStatus" name="status" class="form-select">
+            <option value="">Tất cả trạng thái</option>
+            {% for value, label in status_labels.items() %}
+            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label[0] }}</option>
+            {% endfor %}
+        </select>
+        <button class="btn btn-primary" type="submit">Lọc đơn</button>
+    </form>
+    <p class="small text-secondary">{{ pagination.total }} đơn ứng tuyển</p>
+    <div class="candidate-application-list">
+        {% for application in applications %}
+        <article class="card candidate-application-card" data-application-id="{{ application.application_id }}">
+            <div class="card-body">
+                <div class="candidate-application-summary">
+                    <h2 class="h6 fw-bold mb-0"><a data-application-job href="{{ url_for('candidate.application_detail', application_id=application.application_id) }}">{{ application.job_title }}</a></h2>
+                    <p class="candidate-application-company" data-application-company>{{ application.company_name }}</p>
+                    {{ job_notice(application.job_status) }}
+                </div>
+                <div class="candidate-application-aside">
+                    {{ status_badge(application.application_status) }}
+                    <p class="candidate-application-date">Ngày ứng tuyển: {{ application.applied_at.strftime('%d/%m/%Y') }}</p>
+                    <a class="btn btn-outline-primary btn-sm" href="{{ url_for('candidate.application_detail', application_id=application.application_id) }}">Xem đơn ứng tuyển</a>
+                </div>
+            </div>
+        </article>
+        {% else %}
+        <div class="card"><div class="card-body candidate-empty-state">
+            <p class="mb-2">{{ 'Không có đơn phù hợp bộ lọc.' if selected_status else 'Bạn chưa có đơn ứng tuyển nào.' }}</p>
+            <a class="btn btn-outline-primary btn-sm" href="{{ url_for('public_jobs.index') }}">Tìm việc làm</a>
+        </div></div>
+        {% endfor %}
+    </div>
+    {% if pagination.pages > 1 %}
+    <nav class="candidate-pagination mt-3" aria-label="Phân trang đơn ứng tuyển">
+        <ul class="pagination flex-wrap justify-content-center">
+            {% for page in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=1) %}
+            {% if page %}<li class="page-item {{ 'active' if page == pagination.page else '' }}">
+                <a class="page-link" href="{{ url_for('candidate.applications', page=page, status=selected_status) }}" {% if page == pagination.page %}aria-current="page"{% endif %}>{{ page }}</a>
+            </li>{% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</section>
+{% endblock %}

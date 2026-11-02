@@ -123,6 +123,7 @@
                         <td class="text-end">
                             <form method="POST"
                                 action="{{ url_for('admin.toggle_job_visibility', job_id=job.job_id) }}">
+                                <input type="hidden" name="is_hidden" value="{{ '0' if job.is_hidden else '1' }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 {% if job.is_hidden %}
                                 <button type="submit" class="btn btn-sm btn-outline-success">

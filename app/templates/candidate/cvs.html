@@ -4,7 +4,7 @@
 endif %}{% endblock %}
 
 {% block candidate_content %}
-<section class="cv-page">
+<section class="cv-page {{ 'cv-list-page' if view_mode|default('list') != 'skills' else '' }}">
     <div>
         {% if view_mode|default('list') == 'skills' %}
         <!-- Header xác nhận kỹ năng -->
@@ -200,7 +200,7 @@ endif %}{% endblock %}
             </div>
             <form method="POST" action="{{ url_for('candidate.upload_cv_file') }}" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="file" id="cvFileTop" name="cv_file" accept=".pdf,.docx,.jpg,.jpeg,.png" class="d-none"
+                <input type="file" id="cvFileTop" name="cv_file" accept=".pdf,.docx,.jpg,.jpeg,.png" class="visually-hidden cv-upload-input"
                     onchange="this.form.submit()">
                 <label for="cvFileTop" class="btn btn-primary px-4 py-2"><i class="bi bi-cloud-arrow-up me-2"></i>Tải CV
                     lên</label>
@@ -210,7 +210,7 @@ endif %}{% endblock %}
         {% if cvs %}
         <!-- Hướng dẫn -->
         <div class="card cv-guide-card mb-4">
-            <div class="card-body p-4">
+            <div class="card-body">
                 <div class="row g-3 text-center">
                     <div class="col-md-4">
                         <div class="cv-step-icon mx-auto mb-2"><i class="bi bi-cloud-arrow-up"></i></div>
@@ -236,97 +236,43 @@ endif %}{% endblock %}
             <h2 class="h5 fw-bold mb-0">CV đã tải lên</h2>
             <span class="badge rounded-pill cv-count-badge">{{ cvs|length }} CV</span>
         </div>
-        <div class="row g-4">
+        <div class="row g-3">
             {% for cv in cvs %}
-            <div class="col-12 col-xl-6">
-                <div class="card cv-item-card h-100">
-                    <div class="card-body p-4 cv-item-body">
-                        <div class="d-flex align-items-start gap-3">
-                            <div class="cv-file-icon flex-shrink-0">
-                                {% if cv.file_type == "PDF" %}
-                                <i class="bi bi-file-earmark-pdf"></i>
-                                {% elif cv.file_type == "DOCX" %}
-                                <i class="bi bi-file-earmark-word"></i>
-                                {% else %}
-                                <i class="bi bi-file-earmark-image"></i>
-                                {% endif %}
-                            </div>
-                            <div class="flex-grow-1 overflow-hidden">
-                                <div class="d-flex flex-column flex-sm-row justify-content-between gap-2">
-                                    <div class="overflow-hidden">
-                                        <h3 class="h5 fw-bold text-truncate mb-1">{{ cv.file_name }}</h3>
-                                        <div class="small text-secondary">
-                                            <span class="me-3"><i class="bi bi-file-earmark me-1"></i>{{ cv.file_type
-                                                }}</span>
-                                            <span><i class="bi bi-calendar3 me-1"></i>{{
-                                                cv.uploaded_at.strftime("%d/%m/%Y") }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        {% if cv.analysis_status == "COMPLETED" %}
-                                        <span class="badge rounded-pill text-bg-success"><i
-                                                class="bi bi-check-circle me-1"></i>Đã phân tích</span>
-                                        {% elif cv.analysis_status == "FAILED" %}
-                                        <span class="badge rounded-pill text-bg-danger"><i
-                                                class="bi bi-exclamation-circle me-1"></i>Phân tích thất bại</span>
-                                        {% else %}
-                                        <span class="badge rounded-pill cv-status-pending"><i
-                                                class="bi bi-clock me-1"></i>Chưa phân tích</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="mt-4">
-                                    {% if cv.analysis_status == "COMPLETED" %}
-                                    <p class="small text-secondary mb-3">CV đã được JobFit phân tích. Bạn có thể xem kỹ
-                                        năng hoặc tìm công việc phù hợp.</p>
-                                    {% elif cv.analysis_status == "FAILED" %}
-                                    <p class="small text-secondary mb-3">JobFit chưa thể phân tích CV này. Bạn có thể
-                                        thử phân tích lại.</p>
-                                    {% else %}
-                                    <p class="small text-secondary mb-3">CV này chưa được xác nhận kỹ năng. Hãy bắt đầu
-                                        phân tích để sử dụng các tính năng phù hợp việc làm.</p>
-                                    {% endif %}
-                                </div>
+            <div class="col-12 col-lg-6 d-flex">
+                <div class="card cv-item-card w-100" data-cv-id="{{ cv.cv_id }}">
+                    <div class="card-body cv-item-body">
+                        <div class="cv-card-heading">
+                            <div class="cv-file-icon flex-shrink-0"><i class="bi {{ 'bi-file-earmark-pdf' if cv.file_type == 'PDF' else 'bi-file-earmark-word' if cv.file_type == 'DOCX' else 'bi-file-earmark-image' }}"></i></div>
+                            <div class="cv-card-title">
+                                <h3 class="h6 fw-bold mb-1">{{ cv.file_name }}</h3>
+                                <p class="small text-secondary mb-0">{{ cv.file_type }} · {{ cv.uploaded_at.strftime('%d/%m/%Y') }}</p>
                             </div>
                         </div>
-                        <hr class="my-4 cv-item-divider">
-                        <div class="d-flex flex-column flex-sm-row gap-2">
-                            <a href="{{ url_for('candidate.view_cv', cv_id=cv.cv_id) }}" target="_blank" rel="noopener"
-                                class="btn btn-outline-primary">
-                                <i class="bi bi-eye me-2"></i>Xem CV
-                            </a>
-                            {% if cv.analysis_status == "COMPLETED" %}
-                            <a href="{{ url_for('candidate.review_cv_skills', cv_id=cv.cv_id) }}"
-                                class="btn btn-primary flex-grow-1">
-                                <i class="bi bi-bar-chart me-2"></i>Xem kỹ năng
-                            </a>
-                            <a href="#" class="btn btn-outline-primary flex-grow-1" onclick="return false;"
-                                title="Chức năng đang phát triển">
-                                <i class="bi bi-briefcase me-2"></i>Tìm việc phù hợp
-                            </a>
-                            {% elif cv.extracted_text %}
-                            <a href="{{ url_for('candidate.review_cv_skills', cv_id=cv.cv_id) }}"
-                                class="btn btn-primary flex-grow-1">
-                                <i class="bi bi-check2-square me-2"></i>Tiếp tục xác nhận
-                            </a>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge {{ 'text-bg-success' if cv.analysis_status == 'COMPLETED' else 'text-bg-danger' if cv.analysis_status == 'FAILED' else 'cv-status-pending' }}">{{ 'Đã phân tích' if cv.analysis_status == 'COMPLETED' else 'Phân tích thất bại' if cv.analysis_status == 'FAILED' else 'Chưa phân tích' }}</span>
+                            <span class="badge cv-count-badge" data-cv-visibility>{{ 'Đã ẩn' if cv.is_hidden else 'Đang hiển thị' }}</span>
+                        </div>
+                        <div class="cv-card-actions">
+                            <a href="{{ url_for('candidate.view_cv', cv_id=cv.cv_id) }}" target="_blank" rel="noopener" class="btn btn-outline-primary">Xem CV</a>
+                            {% if cv.analysis_status == 'COMPLETED' or cv.extracted_text %}
+                            <a href="{{ url_for('candidate.review_cv_skills', cv_id=cv.cv_id) }}" class="btn btn-primary">{{ 'Xem kỹ năng' if cv.analysis_status == 'COMPLETED' else 'Tiếp tục xác nhận' }}</a>
                             {% else %}
-                            <form method="POST" action="{{ url_for('candidate.analyze_cv', cv_id=cv.cv_id) }}"
-                                class="flex-grow-1">
+                            <form method="POST" action="{{ url_for('candidate.analyze_cv', cv_id=cv.cv_id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-stars me-2"></i>{% if cv.analysis_status == "FAILED" %}Phân tích
-                                    lại{% else %}Phân tích CV{% endif %}
-                                </button>
+                                <button type="submit" class="btn btn-primary">{{ 'Phân tích lại' if cv.analysis_status == 'FAILED' else 'Phân tích CV' }}</button>
                             </form>
                             {% endif %}
-                            <form method="POST" action="{{ url_for('candidate.delete_cv_file', cv_id=cv.cv_id) }}"
-                                onsubmit="return confirm('Bạn có chắc muốn xóa CV này không?');">
+                            <form method="POST" action="{{ url_for('candidate.change_cv_visibility', cv_id=cv.cv_id) }}" data-candidate-action="visibility">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-outline-danger w-100" title="Xóa CV">
-                                    <i class="bi bi-trash"></i><span class="d-sm-none ms-2">Xóa CV</span>
-                                </button>
+                                <input type="hidden" name="is_hidden" value="{{ '0' if cv.is_hidden else '1' }}">
+                                <button type="submit" class="btn btn-outline-primary">{{ 'Hiện CV' if cv.is_hidden else 'Ẩn CV' }}</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('candidate.delete_cv_file', cv_id=cv.cv_id) }}" onsubmit="return confirm('Bạn có chắc muốn xóa CV này không?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-outline-danger">Xóa CV</button>
                             </form>
                         </div>
+                        <p class="candidate-action-message small mb-0" role="status" aria-live="polite"></p>
                     </div>
                 </div>
             </div>
@@ -335,13 +281,13 @@ endif %}{% endblock %}
         {% else %}
         <!-- Chưa có CV -->
         <div class="card cv-empty-card">
-            <div class="card-body text-center px-4 py-5">
+            <div class="card-body text-center">
                 <div class="cv-empty-icon mx-auto mb-4"><i class="bi bi-file-earmark-arrow-up"></i></div>
                 <p class="text-secondary mx-auto mb-4 cv-empty-description">Chưa có CV nào được tải lên.</p>
                 <form method="POST" action="{{ url_for('candidate.upload_cv_file') }}" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="file" id="cvFileEmpty" name="cv_file" accept=".pdf,.docx,.jpg,.jpeg,.png"
-                        class="d-none" onchange="this.form.submit()">
+                        class="visually-hidden cv-upload-input" onchange="this.form.submit()">
                     <label for="cvFileEmpty" class="btn btn-primary px-4 py-2"><i
                             class="bi bi-cloud-arrow-up me-2"></i>Tải CV lên</label>
                 </form>
@@ -357,6 +303,7 @@ endif %}{% endblock %}
 
 {% block scripts %}
 {{ super() }}
+{% if view_mode|default('list') != 'skills' %}<script src="{{ url_for('static', filename='js/candidate.js') }}" defer></script>{% endif %}
 {% if view_mode|default('list') == 'skills' %}
 <script>
     document.addEventListener("DOMContentLoaded", function () {

@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% if header_user and header_user.role in ['CANDIDATE', 'RECRUITER'] %}<link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">{% endif %}
     {% block styles %}{% endblock %}
 </head>
 
@@ -20,23 +21,46 @@
                     class="brand-logo">
                 <span>JobFit</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
-                aria-controls="mainNavbar" aria-expanded="false" aria-label="Mở menu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
             <div class="collapse navbar-collapse" id="mainNavbar">
                 <ul class="navbar-nav me-auto ms-lg-4 gap-lg-2">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('public_jobs.index') }}">Việc làm</a></li>
+                    <li class="nav-item"><a class="nav-link {{ 'active' if request.blueprint in ['public_jobs', 'public_companies'] else '' }}" href="{{ url_for('public_jobs.index') }}" {% if request.blueprint in ['public_jobs', 'public_companies'] %}aria-current="page"{% endif %}>Việc làm</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Phân tích CV</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Việc làm phù hợp</a></li>
                 </ul>
-                <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2 mt-3 mt-lg-0">
-                    {% if header_user %}
+                {% if not header_user %}
+                <div class="header-guest-actions d-flex flex-column flex-lg-row align-items-lg-center gap-2 mt-3 mt-lg-0">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-link text-decoration-none text-dark fw-semibold">Đăng nhập</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary px-4">Đăng ký</a>
+                </div>
+                {% endif %}
+            </div>
+            {% if header_user %}
+            <div class="header-actions">
+                    {% if header_user.role in ['CANDIDATE', 'RECRUITER'] %}
+                    <div class="dropdown notification-bell" id="notificationBell" data-sync-url="{{ url_for('notifications.sync') }}" data-viewer="{{ header_user.user_id }}" data-role="{{ header_user.role }}">
+                        <button class="btn notification-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Thông báo">
+                            <i class="bi bi-bell" aria-hidden="true"></i><span id="notificationUnread" class="notification-count" hidden>0</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end notification-dropdown">
+                            <div class="notification-dropdown-heading">
+                                <div><strong>Thông báo</strong><span class="notification-unread-summary" data-notification-unread-label hidden></span></div>
+                                <a href="{{ url_for('notifications.index') }}">Xem tất cả</a>
+                            </div>
+                            <input id="notificationCsrf" type="hidden" value="{{ csrf_token() }}">
+                            <div id="notificationLatest"><p class="notification-empty" role="status">Đang tải thông báo…</p></div>
+                            <p id="notificationConnection" class="notification-connection" role="status" aria-live="polite"></p>
+                            <form class="notification-dropdown-footer" method="POST" action="{{ url_for('notifications.read_all') }}" data-notification-read>
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-link btn-sm"><i class="bi bi-check2-all" aria-hidden="true"></i> Đánh dấu tất cả đã đọc</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
                     {% set role_name = {'ADMIN': 'Quản trị viên', 'RECRUITER': 'Nhà tuyển dụng', 'CANDIDATE': 'Ứng
                     viên'}.get(header_user.role, 'Người dùng') %}
                     <div class="dropdown account-dropdown">
                         <button class="btn account-dropdown-toggle d-flex align-items-center gap-2" type="button"
-                            data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                            data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Tài khoản {{ header_user.user_name }}">
                             <span class="account-avatar">
                                 {% if header_user.avatar %}
                                 <img src="{{ url_for('static', filename=header_user.avatar) }}" alt="Ảnh đại diện"
@@ -97,13 +121,12 @@
                             </div>
                         </div>
                     </div>
-                    {% else %}
-                    <a href="{{ url_for('auth.login') }}"
-                        class="btn btn-link text-decoration-none text-dark fw-semibold">Đăng nhập</a>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary px-4">Đăng ký</a>
-                    {% endif %}
-                </div>
             </div>
+            {% endif %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                aria-controls="mainNavbar" aria-expanded="false" aria-label="Mở menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
         </div>
     </nav>
 
@@ -111,16 +134,15 @@
     <div class="flash-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
-        {% set icon = 'bi-check-circle-fill text-success' if category == 'success' else 'bi-exclamation-circle-fill
-        text-danger' if category == 'danger' else 'bi-exclamation-triangle-fill text-warning' if category == 'warning'
-        else 'bi-info-circle-fill text-primary' %}
-        <div class="toast flash-toast show border-0 shadow mb-2" role="alert" data-bs-delay="4000">
+        {% set kind = 'danger' if category in ['danger', 'error'] else category if category in ['success', 'warning'] else 'info' %}
+        {% set icon = 'bi-check-circle-fill text-success' if kind == 'success' else 'bi-exclamation-circle-fill text-danger' if kind == 'danger' else 'bi-exclamation-triangle-fill text-warning' if kind == 'warning' else 'bi-info-circle-fill text-primary' %}
+        <div class="toast flash-toast show border-0 shadow mb-2" role="alert" aria-live="{{ 'assertive' if kind in ['danger', 'warning'] else 'polite' }}" aria-atomic="true" data-flash-category="{{ kind }}" data-bs-delay="4000" data-bs-autohide="{{ 'true' if kind == 'success' else 'false' }}">
             <div class="d-flex align-items-center">
                 <div class="toast-body d-flex gap-2 align-items-center flex-grow-1">
                     <i class="bi {{ icon }} fs-5"></i>
                     <span>{{ message }}</span>
                 </div>
-                <button type="button" class="btn border-0 p-0 me-3 text-secondary" data-bs-dismiss="toast"
+                <button type="button" class="btn flash-close border-0 p-0 me-3 text-secondary" data-bs-dismiss="toast"
                     aria-label="Đóng">
                     <i class="bi bi-x-lg small"></i>
                 </button>
@@ -217,10 +239,69 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Tự ẩn thông báo sau 4 giây.
+        // Chỉ tự ẩn thành công; lỗi và cảnh báo giữ đến khi người dùng đóng.
         document.querySelectorAll('.flash-toast').forEach((element) => {
-            bootstrap.Toast.getOrCreateInstance(element, { delay: 4000 }).show();
+            bootstrap.Toast.getOrCreateInstance(element, { delay: 4000, autohide: element.dataset.flashCategory === 'success' }).show();
         });
+
+        // Phản hồi AJAX dùng lại Bootstrap Toast và vùng flash hiện có.
+        window.showJobfitToast = (message, category) => {
+            const previous = message.closest('.flash-toast');
+            if (previous?.dataset.feedbackWaiting === '1') {
+                previous.dataset.feedbackNext = category;
+                return;
+            }
+            if (previous?.classList.contains('showing')) {
+                previous.dataset.feedbackWaiting = '1';
+                previous.dataset.feedbackNext = category;
+                const resume = () => {
+                    previous.removeEventListener('shown.bs.toast', resume);
+                    previous.removeEventListener('hidden.bs.toast', resume);
+                    // Đợi cả callback Bootstrap kết thúc trước khi dispose.
+                    queueMicrotask(() => {
+                        const latest = previous.dataset.feedbackNext;
+                        delete previous.dataset.feedbackWaiting;
+                        delete previous.dataset.feedbackNext;
+                        if (message.isConnected) window.showJobfitToast(message, latest);
+                    });
+                };
+                previous.addEventListener('shown.bs.toast', resume);
+                previous.addEventListener('hidden.bs.toast', resume);
+                return;
+            }
+            if (previous) {
+                bootstrap.Toast.getInstance(previous)?.dispose();
+                previous.remove();
+            }
+            const toast = document.createElement('div');
+            toast.className = 'toast flash-toast border-0 shadow mb-2';
+            toast.dataset.flashCategory = category;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', category === 'danger' ? 'assertive' : 'polite');
+            toast.setAttribute('aria-atomic', 'true');
+            const row = document.createElement('div');
+            row.className = 'd-flex align-items-center';
+            const body = document.createElement('div');
+            body.className = 'toast-body d-flex gap-2 align-items-center flex-grow-1';
+            const icon = document.createElement('i');
+            icon.className = 'bi fs-5 ' + (category === 'danger'
+                ? 'bi-exclamation-circle-fill text-danger' : 'bi-check-circle-fill text-success');
+            message.hidden = false;
+            message.classList.remove('visually-hidden', 'text-danger');
+            body.append(icon, message);
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.className = 'btn flash-close border-0 p-0 me-3 text-secondary';
+            close.dataset.bsDismiss = 'toast';
+            close.setAttribute('aria-label', 'Đóng');
+            const cross = document.createElement('i');
+            cross.className = 'bi bi-x-lg small';
+            close.append(cross);
+            row.append(body, close);
+            toast.append(row);
+            document.querySelector('.flash-container').append(toast);
+            bootstrap.Toast.getOrCreateInstance(toast, { delay: 4000, autohide: category === 'success' }).show();
+        };
 
         // Tự mở menu tài khoản khi rê chuột trên thiết bị có hover.
         const accountDropdown = document.querySelector('.account-dropdown');
@@ -250,6 +331,7 @@
     </script>
 
     {% block scripts %}{% endblock %}
+    {% if header_user and header_user.role in ['CANDIDATE', 'RECRUITER'] %}<script src="{{ url_for('static', filename='js/notifications.js') }}" defer></script>{% endif %}
 </body>
 
 </html>

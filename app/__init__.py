@@ -8,6 +8,8 @@ from app.controllers.candidate_controller import candidate_bp
 from app.controllers.recruiter_controller import recruiter_bp
 from app.controllers.admin_controller import admin_bp
 from app.controllers.public_jobs_controller import public_jobs_bp
+from app.controllers.public_companies_controller import public_companies_bp
+from app.controllers.notification_controller import notifications_bp
 
 def create_app():
     app = Flask(__name__)
@@ -62,5 +64,7 @@ def create_app():
 
     # Các trang việc làm công khai cho Guest và Candidate.
     app.register_blueprint(public_jobs_bp)
+    app.register_blueprint(public_companies_bp)
+    app.register_blueprint(notifications_bp)
 
     return app

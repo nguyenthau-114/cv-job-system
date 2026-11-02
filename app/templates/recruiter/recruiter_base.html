@@ -34,6 +34,12 @@
 </nav>
 
 <!-- ĐƯỜNG PHÂN CÁCH HAI NHÓM -->
+<nav class="nav flex-column gap-1" aria-label="Hồ sơ ứng tuyển">
+    <a class="workspace-nav-link recruiter-nav-link {% if request.endpoint in ['recruiter.applications', 'recruiter.application_detail'] %}active{% endif %}"
+        href="{{ url_for('recruiter.applications') }}" {% if request.endpoint in ['recruiter.applications', 'recruiter.application_detail'] %}aria-current="page"{% endif %}>
+        <i class="bi bi-people"></i><span>Hồ sơ ứng tuyển</span>
+    </a>
+</nav>
 <div class="workspace-sidebar-divider recruiter-sidebar-divider"></div>
 
 <!-- NHÓM TÀI KHOẢN -->

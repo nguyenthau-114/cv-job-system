@@ -41,6 +41,298 @@
     }
 }
 
+.candidate-application-list {
+    display: grid;
+    gap: 12px;
+}
+
+.candidate-application-card .card-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px 20px;
+    padding: 16px;
+}
+
+.candidate-application-summary {
+    min-width: 0;
+}
+
+.candidate-application-summary h2 {
+    line-height: 1.5;
+}
+
+.candidate-application-aside {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.candidate-application-company {
+    margin: 6px 0 8px;
+    color: var(--workspace-text);
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.candidate-application-company:empty {
+    display: none;
+}
+
+.candidate-application-date {
+    margin: 0 0 8px;
+    color: #526579;
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+.candidate-application-aside .candidate-application-date {
+    margin: 0;
+}
+
+.candidate-application-aside .btn,
+.candidate-filter .btn,
+.candidate-application-detail .candidate-action-form .btn {
+    min-height: 36px;
+    font-size: 0.8125rem;
+}
+
+.candidate-pagination .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    min-height: 36px;
+}
+
+.candidate-applications,
+.candidate-application-detail {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.candidate-application-detail {
+    max-width: 1040px;
+    margin-inline: auto;
+}
+
+.candidate-application-grid,
+.candidate-application-main,
+.candidate-application-side {
+    display: grid;
+    align-content: start;
+    gap: 16px;
+    min-width: 0;
+}
+
+.candidate-application-grid {
+    align-items: start;
+}
+
+.candidate-application-hero .candidate-application-heading h2 {
+    color: var(--jobfit-navy);
+    font-size: 1.125rem;
+    line-height: 1.5;
+}
+
+.candidate-application-heading {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px 12px;
+    margin-bottom: 8px;
+}
+
+.candidate-application-heading > h2 {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.candidate-application-heading > [data-application-status] {
+    flex-shrink: 0;
+}
+
+.candidate-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--workspace-border);
+    border-radius: 12px;
+    background: var(--workspace-surface);
+    font-size: 0.875rem;
+}
+
+.candidate-filter .form-select {
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+    font-size: 0.875rem;
+}
+
+.candidate-contact-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.candidate-contact-list dt {
+    margin-bottom: 4px;
+    color: #526579;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.candidate-contact-list dd {
+    margin-bottom: 0;
+    overflow-wrap: anywhere;
+}
+
+.candidate-cover-letter {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    font-size: 0.875rem;
+    line-height: 1.75;
+}
+
+.candidate-cv-link {
+    display: block;
+    padding: 12px;
+    border: 1px solid var(--workspace-border);
+    border-radius: 8px;
+    background: var(--jobfit-pastel);
+    overflow-wrap: anywhere;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.candidate-action-explanation {
+    color: #526579;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+}
+
+.candidate-application-detail .candidate-action-form {
+    min-width: 0;
+    font-size: 0.875rem;
+}
+
+.candidate-application-detail .candidate-action-form .form-select {
+    min-width: 0;
+    max-width: 100%;
+    font-size: 0.8125rem;
+}
+
+.candidate-application-detail .candidate-withdraw-panel {
+    border-color: var(--bs-danger-border-subtle);
+}
+
+.candidate-action-message:not(:empty) {
+    margin-top: 8px;
+}
+
+@media (min-width: 992px) {
+    .candidate-application-grid {
+        grid-template-columns: minmax(0, 1.55fr) minmax(240px, 1fr);
+    }
+}
+
+.cv-list-page .cv-guide-card .card-body {
+    padding: 12px;
+}
+
+.cv-list-page .cv-item-body {
+    gap: 12px;
+    min-width: 0;
+    padding: 14px;
+}
+
+.cv-card-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.cv-card-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.cv-list-page .cv-file-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    font-size: 20px;
+}
+
+.cv-card-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: auto;
+}
+
+.cv-card-actions .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 36px;
+    padding: 6px;
+    font-size: 0.8rem;
+    line-height: 1.25;
+}
+
+.jobs-saved-page .jobs-result-card {
+    padding: 12px;
+}
+
+.jobs-saved-page .jobs-card-footer {
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+.jobs-saved-page .jobs-card-meta {
+    margin-top: 6px;
+}
+
+.jobs-saved-page h1,
+.cv-list-page h1 {
+    color: var(--jobfit-navy);
+    font-size: 1.375rem;
+}
+
+.jobs-saved-description {
+    margin-bottom: 16px;
+    color: #526579;
+    font-size: 0.875rem;
+}
+
+.jobs-saved-page .jobs-empty-state {
+    min-height: 0;
+    padding: 24px 16px;
+}
+
+.jobs-saved-page .jobs-empty-state h2 {
+    color: var(--jobfit-navy);
+    font-size: 1.125rem;
+}
+
+.cv-upload-input:focus-visible + label {
+    outline: 3px solid var(--jobfit-primary);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 0.2rem var(--bs-focus-ring-color);
+}
+
+.cv-list-page .cv-empty-card .card-body {
+    padding: 24px;
+}
+
 .cv-page {
     --cv-primary: var(--jobfit-primary, #2563a6);
     --cv-pastel: var(--jobfit-pastel, #eef6ff);
@@ -341,12 +633,34 @@
 }
 
 @media (max-width: 767.98px) {
+    .candidate-application-card .card-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .candidate-application-aside {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px 12px;
+    }
+
+    .candidate-application-aside .btn {
+        margin-left: auto;
+    }
+
     .cv-skills-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 575.98px) {
+    .candidate-filter .form-label {
+        width: 100%;
+    }
+
+    .candidate-filter .form-select {
+        flex: 1;
+    }
     .cv-page .cv-review-title {
         font-size: 1.3rem;
     }

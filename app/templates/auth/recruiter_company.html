@@ -1,19 +1,19 @@
 {% extends "layouts/base.html" %}
 {% block title %}Thông tin công ty - JobFit{% endblock %}
 {% block content %}
-<section class="auth-page py-5">
+<section class="auth-page">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-12 col-lg-8 col-xl-7">
-                <div class="card auth-card border-0 shadow rounded-4 overflow-hidden">
+                <div class="card auth-card overflow-hidden">
                     <!-- Header đồng bộ với các trang Authentication -->
-                    <div class="auth-card-header text-center px-4 py-4">
+                    <div class="auth-card-header text-center">
                         <img src="{{ url_for('static', filename='images/jobfit-logo.png') }}" alt="JobFit Logo" width="72" height="72" class="object-fit-contain mb-3">
                         <h1 class="h3 fw-bold mb-2">Thông tin công ty</h1>
-                        <p class="text-secondary mb-0">Cung cấp thông tin cơ bản để hoàn tất đăng ký nhà tuyển dụng.</p>
+                        <p class="mb-0">Cung cấp thông tin cơ bản để hoàn tất đăng ký nhà tuyển dụng.</p>
                     </div>
 
-                    <div class="card-body bg-white p-4 p-md-5">
+                    <div class="card-body bg-white">
                         <form method="POST" action="{{ url_for('auth.recruiter_company') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 

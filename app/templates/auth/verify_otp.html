@@ -1,19 +1,19 @@
 {% extends "layouts/base.html" %}
 {% block title %}Xác thực email - JobFit{% endblock %}
 {% block content %}
-<section class="auth-page py-5">
+<section class="auth-page">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-12 col-md-8 col-lg-6 col-xl-5">
-                <div class="card auth-card auth-card-sm border-0 shadow rounded-4 overflow-hidden">
+                <div class="card auth-card auth-card-sm overflow-hidden">
                     <!-- Header đồng bộ với Login/Register -->
-                    <div class="auth-card-header text-center px-4 py-4">
+                    <div class="auth-card-header text-center">
                         <img src="{{ url_for('static', filename='images/jobfit-logo.png') }}" alt="JobFit Logo" width="72" height="72" class="object-fit-contain mb-3">
                         <h1 class="h3 fw-bold mb-2">Xác thực email</h1>
-                        <p class="text-secondary mb-0">Nhập mã OTP gồm 6 chữ số đã được gửi đến email của bạn.</p>
+                        <p class="mb-0">Nhập mã OTP gồm 6 chữ số đã được gửi đến email của bạn.</p>
                     </div>
 
-                    <div class="card-body bg-white p-4 p-md-5">
+                    <div class="card-body bg-white">
                         <form method="POST" action="{{ url_for('auth.verify_email') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-4">

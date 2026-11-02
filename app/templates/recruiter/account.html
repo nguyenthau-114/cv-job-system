@@ -7,9 +7,9 @@
         <p class="text-secondary mb-0">Quản lý thông tin và bảo mật tài khoản nhà tuyển dụng.</p>
     </div>
     <div class="card recruiter-profile-card mb-4">
-        <div class="card-body p-4">
+        <div class="card-body">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-                <div class="d-flex align-items-center gap-3">
+                <div class="recruiter-profile-heading">
                     <div class="recruiter-profile-avatar">
                         {% if user.avatar %}
                         <img src="{{ url_for('static', filename=user.avatar) }}" alt="Ảnh đại diện">
@@ -83,7 +83,7 @@
         </div>
     </div>
     <div class="card recruiter-profile-card">
-        <div class="card-body p-4">
+        <div class="card-body">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                 <div>
                     <h5 class="fw-bold mb-1"><i class="bi bi-shield-check me-2"></i>Bảo mật tài khoản</h5>

@@ -16,7 +16,7 @@
         <div class="card admin-stat-card admin-user-compact h-100">
             <div class="card-body d-flex align-items-center gap-2">
                 <div class="admin-stat-icon {{ color }}"><i class="bi {{ icon }}"></i></div>
-                <div class="min-w-0">
+                <div class="admin-stat-content">
                     <h3 class="fw-bold mb-0">{{ value }}</h3>
                     <p class="text-secondary mb-0">{{ label }}</p>
                 </div>
@@ -27,39 +27,42 @@
 </div>
 
 <div class="card admin-panel-card">
-    <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <h5 class="fw-bold mb-0">Danh sách tài khoản</h5>
             <span class="text-secondary small">{{ accounts|length }} kết quả</span>
         </div>
-        <form method="GET" action="{{ url_for('admin.users') }}" class="row g-2 mb-4">
-            <div class="col-lg-5">
-                <input type="search" name="q" class="form-control" placeholder="Tìm theo tên hoặc email..."
+        <form method="GET" action="{{ url_for('admin.users') }}" class="admin-filter-form mb-4">
+            <div>
+                <label for="adminUserKeyword" class="form-label">Tìm tài khoản</label>
+                <input id="adminUserKeyword" type="search" name="q" class="form-control" placeholder="Tìm theo tên hoặc email..."
                     value="{{ keyword }}">
             </div>
-            <div class="col-sm-6 col-lg-3">
-                <select name="role" class="form-select">
+            <div>
+                <label for="adminUserRole" class="form-label">Vai trò</label>
+                <select id="adminUserRole" name="role" class="form-select">
                     <option value="">Tất cả vai trò</option>
                     <option value="CANDIDATE" {% if selected_role=='CANDIDATE' %}selected{% endif %}>Ứng viên</option>
                     <option value="RECRUITER" {% if selected_role=='RECRUITER' %}selected{% endif %}>Nhà tuyển dụng
                     </option>
                 </select>
             </div>
-            <div class="col-sm-6 col-lg-2">
-                <select name="status" class="form-select">
+            <div>
+                <label for="adminUserStatus" class="form-label">Trạng thái</label>
+                <select id="adminUserStatus" name="status" class="form-select">
                     <option value="">Tất cả trạng thái</option>
                     <option value="ACTIVE" {% if selected_status=='ACTIVE' %}selected{% endif %}>Hoạt động</option>
                     <option value="LOCKED" {% if selected_status=='LOCKED' %}selected{% endif %}>Bị khóa</option>
                 </select>
             </div>
-            <div class="col-lg-2 d-flex gap-2">
+            <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-search"></i> Lọc</button>
-                <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary" title="Đặt lại"><i
+                <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary" title="Đặt lại" aria-label="Đặt lại bộ lọc tài khoản"><i
                         class="bi bi-arrow-counterclockwise"></i></a>
             </div>
         </form>
         <div class="table-responsive">
-            <table class="table align-middle admin-users-table">
+            <table class="table align-middle admin-data-table admin-users-table mb-0">
                 <thead>
                     <tr>
                         <th>Tài khoản</th>
@@ -73,48 +76,48 @@
                 <tbody>
                     {% for account in accounts %}
                     <tr>
-                        <td>
+                        <td data-label="Tài khoản">
                             <div class="fw-semibold">{{ account.user_name }}</div>
                             <div class="text-secondary small">{{ account.email }}</div>
                         </td>
-                        <td>
+                        <td data-label="Vai trò">
                             {% if account.role == 'CANDIDATE' %}
-                            <span class="badge text-bg-primary-subtle text-primary-emphasis">Ứng viên</span>
+                            <span class="badge bg-primary-subtle text-primary-emphasis">Ứng viên</span>
                             {% else %}
-                            <span class="badge text-bg-info-subtle text-info-emphasis">Nhà tuyển dụng</span>
+                            <span class="badge admin-role-recruiter">Nhà tuyển dụng</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td data-label="Trạng thái">
                             {% if account.user_status == 'ACTIVE' %}
-                            <span class="badge text-bg-success-subtle text-success-emphasis">Hoạt động</span>
+                            <span class="badge bg-success-subtle text-success-emphasis">Hoạt động</span>
                             {% else %}
-                            <span class="badge text-bg-danger-subtle text-danger-emphasis">Bị khóa</span>
+                            <span class="badge bg-danger-subtle text-danger-emphasis">Bị khóa</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td data-label="Xác thực email">
                             {% if account.email_verified %}
                             <span class="text-success small"><i class="bi bi-check-circle"></i> Đã xác thực</span>
                             {% else %}
                             <span class="text-secondary small"><i class="bi bi-clock"></i> Chưa xác thực</span>
                             {% endif %}
                         </td>
-                        <td class="text-secondary small">{{ account.user_created_at.strftime('%d/%m/%Y') if
+                        <td data-label="Ngày tạo" class="text-secondary small">{{ account.user_created_at.strftime('%d/%m/%Y') if
                             account.user_created_at else '—' }}</td>
-                        <td class="text-end">
-                            <div class="d-flex justify-content-end gap-2">
+                        <td data-label="Thao tác">
+                            <div class="admin-table-actions">
                                 <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
                                     data-bs-target="#accountDetail{{ account.user_id }}">
-                                    <i class="bi bi-eye"></i> Chi tiết
+                                    Chi tiết
                                 </button>
                                 {% if account.user_status == 'ACTIVE' %}
                                 <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
                                     data-bs-target="#accountStatus{{ account.user_id }}">
-                                    <i class="bi bi-lock"></i> Khóa
+                                    Khóa
                                 </button>
                                 {% elif account.user_status == 'LOCKED' %}
                                 <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal"
                                     data-bs-target="#accountStatus{{ account.user_id }}">
-                                    <i class="bi bi-unlock"></i> Mở khóa
+                                    Mở khóa
                                 </button>
                                 {% endif %}
                             </div>
@@ -133,35 +136,37 @@
 {% for account in accounts %}
 <div class="modal fade" id="accountDetail{{ account.user_id }}" tabindex="-1"
     aria-labelledby="accountTitle{{ account.user_id }}" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title fw-bold" id="accountTitle{{ account.user_id }}">Thông tin tài khoản</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3"><span class="text-secondary small">Họ tên</span>
-                    <div class="fw-semibold">{{ account.user_name }}</div>
+                <dl class="admin-account-detail">
+                <div><dt>Họ tên</dt>
+                    <dd class="fw-semibold">{{ account.user_name }}</dd>
                 </div>
-                <div class="mb-3"><span class="text-secondary small">Email</span>
-                    <div>{{ account.email }}</div>
+                <div><dt>Email</dt>
+                    <dd>{{ account.email }}</dd>
                 </div>
-                <div class="mb-3"><span class="text-secondary small">Số điện thoại</span>
-                    <div>{{ account.phone or 'Chưa cập nhật' }}</div>
+                <div><dt>Số điện thoại</dt>
+                    <dd>{{ account.phone or 'Chưa cập nhật' }}</dd>
                 </div>
-                <div class="mb-3"><span class="text-secondary small">Vai trò</span>
-                    <div>{{ 'Ứng viên' if account.role == 'CANDIDATE' else 'Nhà tuyển dụng' }}</div>
+                <div><dt>Vai trò</dt>
+                    <dd>{{ 'Ứng viên' if account.role == 'CANDIDATE' else 'Nhà tuyển dụng' }}</dd>
                 </div>
-                <div class="mb-3"><span class="text-secondary small">Trạng thái</span>
-                    <div>{{ 'Hoạt động' if account.user_status == 'ACTIVE' else 'Bị khóa' }}</div>
+                <div><dt>Trạng thái</dt>
+                    <dd>{{ 'Hoạt động' if account.user_status == 'ACTIVE' else 'Bị khóa' }}</dd>
                 </div>
-                <div class="mb-3"><span class="text-secondary small">Xác thực email</span>
-                    <div>{{ 'Đã xác thực' if account.email_verified else 'Chưa xác thực' }}</div>
+                <div><dt>Xác thực email</dt>
+                    <dd>{{ 'Đã xác thực' if account.email_verified else 'Chưa xác thực' }}</dd>
                 </div>
-                <div><span class="text-secondary small">Ngày tạo</span>
-                    <div>{{ account.user_created_at.strftime('%d/%m/%Y %H:%M') if account.user_created_at else '—' }}
-                    </div>
+                <div><dt>Ngày tạo</dt>
+                    <dd>{{ account.user_created_at.strftime('%d/%m/%Y %H:%M') if account.user_created_at else '—' }}
+                    </dd>
                 </div>
+                </dl>
             </div>
 
             <div class="modal-footer">
@@ -175,7 +180,7 @@
 {% if account.user_status in ['ACTIVE', 'LOCKED'] %}
 <div class="modal fade" id="accountStatus{{ account.user_id }}" tabindex="-1"
     aria-labelledby="statusTitle{{ account.user_id }}" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title fw-bold" id="statusTitle{{ account.user_id }}">

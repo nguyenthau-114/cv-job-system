@@ -7,9 +7,9 @@
         <p class="text-secondary mb-0">Quản lý hồ sơ doanh nghiệp hiển thị trên JobFit.</p>
     </div>
     <div class="card recruiter-profile-card">
-        <div class="card-body p-4">
+        <div class="card-body">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-                <div class="d-flex align-items-center gap-3">
+                <div class="recruiter-profile-heading">
                     <div class="recruiter-company-logo">
                         {% if company.logo %}
                         <img src="{{ url_for('static', filename=company.logo) }}" alt="Logo công ty">

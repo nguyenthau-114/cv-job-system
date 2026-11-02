@@ -4,35 +4,123 @@
     color: var(--workspace-text);
 }
 
-/* Dashboard chỉ dùng trong khu vực Candidate, không đổi card của các trang khác. */
-.candidate-dashboard .card {
+/* Chỉ đồng bộ Dashboard và đơn ứng tuyển, không đổi card quản lý CV. */
+.candidate-dashboard .card,
+.candidate-applications .card,
+.candidate-application-detail .card {
     background: var(--workspace-surface);
     color: inherit;
     border-color: var(--workspace-border);
-    border-radius: 10px;
+    border-radius: 12px;
 }
 
-.candidate-dashboard .table {
+.candidate-dashboard h1,
+.candidate-applications h1,
+.candidate-application-detail h1 {
+    color: var(--jobfit-navy);
+    font-size: 1.375rem;
+}
+
+.candidate-dashboard-stats .h5 {
+    color: var(--jobfit-navy);
+}
+
+.candidate-recent-panel h2,
+.candidate-panel-title {
+    margin: 0 0 12px;
+    color: var(--jobfit-navy);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.candidate-dashboard a:not(.btn),
+.candidate-applications [data-application-job],
+.candidate-application-detail a:not(.btn) {
+    color: var(--jobfit-primary);
+    text-decoration: none;
+}
+
+.candidate-dashboard a:not(.btn):hover,
+.candidate-dashboard a:not(.btn):focus-visible,
+.candidate-applications [data-application-job]:hover,
+.candidate-applications [data-application-job]:focus-visible,
+.candidate-application-detail a:not(.btn):hover,
+.candidate-application-detail a:not(.btn):focus-visible {
+    color: var(--jobfit-navy);
+    text-decoration: underline;
+}
+
+.candidate-recent-panel a.small {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+}
+
+.candidate-recent-table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--workspace-text);
+    --bs-table-border-color: var(--workspace-border);
     table-layout: fixed;
+    font-size: 0.8125rem;
+    line-height: 1.5;
 }
 
-.candidate-dashboard .table th:first-child {
-    width: 35%;
+.candidate-recent-table th:first-child {
+    width: 39%;
 }
 
-.candidate-dashboard .table th:nth-child(2) {
+.candidate-recent-table th:nth-child(2) {
     width: 25%;
 }
 
-.candidate-dashboard .table th:nth-child(3),
-.candidate-dashboard .table th:nth-child(4) {
+.candidate-recent-table th:nth-child(3) {
+    width: 16%;
+}
+
+.candidate-recent-table th:nth-child(4) {
     width: 20%;
 }
 
-.candidate-dashboard .table th,
-.candidate-dashboard .table td,
+.candidate-recent-table th,
+.candidate-recent-table td,
 .candidate-dashboard-stats .card-body {
     overflow-wrap: anywhere;
+}
+
+.candidate-recent-table th {
+    padding: 10px 8px;
+    background: var(--jobfit-background);
+    color: var(--jobfit-navy);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.candidate-recent-table td {
+    padding: 12px 8px;
+}
+
+.candidate-recent-table td:nth-child(3) {
+    color: #526579;
+    font-size: 0.75rem;
+}
+
+.candidate-recent-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.candidate-dashboard .badge[data-application-status],
+.candidate-applications .badge[data-application-status],
+.candidate-application-detail .badge[data-application-status] {
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+.candidate-empty-state {
+    padding: 20px 16px;
+    color: var(--jobfit-muted);
+    font-size: 0.875rem;
+    text-align: center;
 }
 
 @media (max-width: 359.98px) {
@@ -336,10 +424,10 @@
 .cv-page {
     --cv-primary: var(--jobfit-primary, #2563a6);
     --cv-pastel: var(--jobfit-pastel, #eef6ff);
-    --cv-border: #d1dbe6;
+    --cv-border: var(--jobfit-border);
     --cv-text: #30465c;
     --cv-muted: #edf1f5;
-    background: var(--workspace-bg, #f8fafc);
+    background: var(--workspace-bg, #F7F9FC);
 }
 
 /* ===== KHUNG CHUNG ===== */
@@ -349,7 +437,7 @@
 .cv-page .cv-skill-card {
     background: #fff;
     border: 1px solid var(--cv-border);
-    border-radius: 14px;
+    border-radius: 12px;
     box-shadow: 0 2px 10px rgba(15, 23, 42, 0.045);
     transition: none;
     transform: none;
@@ -367,7 +455,7 @@
 .cv-page h1,
 .cv-page h2,
 .cv-page h3 {
-    color: var(--cv-text);
+    color: var(--jobfit-navy);
 }
 
 /* ===== HEADER XÁC NHẬN KỸ NĂNG ===== */
@@ -633,6 +721,63 @@
 }
 
 @media (max-width: 767.98px) {
+    .candidate-recent-table,
+    .candidate-recent-table tbody {
+        display: block;
+        width: 100%;
+    }
+
+    .candidate-recent-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .candidate-recent-table tbody tr {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--workspace-border);
+    }
+
+    .candidate-recent-table tbody tr:last-child {
+        border-bottom: 0;
+    }
+
+    .candidate-recent-table td {
+        display: block;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+    }
+
+    .candidate-recent-table td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 4px;
+        color: #526579;
+        font-size: 0.6875rem;
+        font-weight: 400;
+    }
+
+    .candidate-recent-table td:first-child,
+    .candidate-recent-table td:nth-child(2) {
+        grid-column: 1 / -1;
+    }
+
+    .candidate-recent-table td:first-child::before {
+        display: none;
+    }
+
+    .candidate-recent-table td:nth-child(2)::before {
+        content: attr(data-label) ": ";
+        display: inline;
+    }
+
     .candidate-application-card .card-body {
         grid-template-columns: minmax(0, 1fr);
     }
@@ -661,6 +806,7 @@
     .candidate-filter .form-select {
         flex: 1;
     }
+
     .cv-page .cv-review-title {
         font-size: 1.3rem;
     }

@@ -3,13 +3,13 @@
    WORKSPACE - LAYOUT
 ========================= */
 .workspace-layout {
-    --workspace-bg: #f7f9fc;
-    --workspace-surface: #ffffff;
+    --workspace-bg: var(--jobfit-background);
+    --workspace-surface: var(--jobfit-surface);
     --workspace-text: #30465c;
-    --workspace-heading: #183b63;
-    --workspace-border: #e5eaf0;
-    --workspace-active: #305b85;
-    --workspace-hover: #eaf3fc;
+    --workspace-heading: var(--jobfit-heading);
+    --workspace-border: var(--jobfit-border);
+    --workspace-active: var(--jobfit-primary);
+    --workspace-hover: var(--jobfit-pastel);
     display: flex;
     align-items: flex-start;
     gap: 24px;

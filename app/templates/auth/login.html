@@ -3,16 +3,16 @@
 {% block title %}Đăng nhập - JobFit{% endblock %}
 
 {% block content %}
-<section class="auth-page py-5">
+<section class="auth-page">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-12 col-md-8 col-lg-6 col-xl-5">
 
                 <!-- Card đăng nhập chính -->
-                <div class="card auth-card auth-card-sm border-0 shadow rounded-4 overflow-hidden">
+                <div class="card auth-card auth-card-sm overflow-hidden">
 
                     <!-- Header xanh pastel -->
-                    <div class="auth-card-header text-center px-4 py-4">
+                    <div class="auth-card-header text-center">
 
                         <!-- Logo JobFit -->
                         <img src="{{ url_for('static', filename='images/jobfit-logo.png') }}" alt="JobFit Logo"
@@ -20,13 +20,13 @@
 
                         <h1 class="h3 fw-bold mb-2">Đăng nhập</h1>
 
-                        <p class="text-secondary mb-0">
+                        <p class="mb-0">
                             Chào mừng quay trở lại
                         </p>
                     </div>
 
                     <!-- Form đăng nhập -->
-                    <div class="card-body bg-white p-4 p-md-5 pt-md-4">
+                    <div class="card-body bg-white">
                         <form method="POST" action="{{ url_for('auth.login') }}">
 
                             <!-- CSRF bảo vệ form -->
